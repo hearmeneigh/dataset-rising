@@ -7,6 +7,7 @@ from urllib3.util import Retry
 import requests
 from requests.adapters import HTTPAdapter
 import throttle
+import json
 
 class Crawler:
     fp = None
@@ -46,12 +47,15 @@ class Crawler:
         self.session.mount('http://', self.adapter)
         self.session.mount('https://', self.adapter)
 
-    def crawl(self):
+    def crawl(self, recover: bool = False):
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
         self.fp = open(self.output_file, 'w')
         self.writer = ndjson.writer(self.fp)
 
         result = True
+
+        if recover:
+            self.recover_position()
 
         while result is not None:
             result = self.fetch()
@@ -68,6 +72,7 @@ class Crawler:
                 self.record_count += len(records)
 
             self.cur_index += 1
+            self.save_position()
 
         self.fp.close()
         print(f'Crawled {self.cur_index} page(s) and found {self.record_count} record(s)')
@@ -105,3 +110,21 @@ class Crawler:
     def save_json(self, records):
         for row in records:
             self.writer.writerow(row)
+
+    def get_recover_filename(self):
+        return self.output_file + '.recovery'
+
+    def save_position(self):
+        with open(self.get_recover_filename(), 'w') as fp:
+            json.dump({'cur_index': self.cur_index, 'next_id': self.next_id}, fp)
+
+    def recover_position(self):
+        fn = self.get_recover_filename()
+
+        if not os.path.exists(fn) or not os.path.isfile(fn):
+            return
+
+        with open(fn, 'r') as fp:
+            data = json.load(fp)
+            self.cur_index = int(data.get('cur_index', '0'))
+            self.next_id = data.get('next_id', None)
