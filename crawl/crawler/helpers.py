@@ -21,6 +21,7 @@ def get_e621_search_crawler(output_file: str, search_query: str):
         page_field='page'
     )
 
+
 def get_e621_tag_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
@@ -29,6 +30,7 @@ def get_e621_tag_crawler(output_file: str):
         page_field='page',
         json_field=None
     )
+
 
 def get_e621_implications_crawler(output_file: str):
     return Crawler(
@@ -59,6 +61,7 @@ def get_gelbooru_index_crawler(output_file: str):
         json_field='post'
     )
 
+
 def get_gelbooru_tag_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
@@ -67,6 +70,7 @@ def get_gelbooru_tag_crawler(output_file: str):
         page_field='pid',
         json_field='tag'
     )
+
 
 def get_danbooru_search_crawler(output_file: str, search_query: str):
     return Crawler(
@@ -77,14 +81,17 @@ def get_danbooru_search_crawler(output_file: str, search_query: str):
         json_field=None
     )
 
+
 def get_danbooru_index_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
         base_url='https://danbooru.donmai.us/posts.json?limit=200',
-        page_type='index',
+        page_type='by_id',
         page_field='page',
+        page_field_prefix='b',
         json_field=None
     )
+
 
 def get_danbooru_tag_crawler(output_file: str):
     return Crawler(
@@ -94,6 +101,7 @@ def get_danbooru_tag_crawler(output_file: str):
         page_field='page',
         json_field=None
     )
+
 
 def get_crawler(source: str, type: str, output_file: str, search_query: Optional[str]) -> Crawler:
     if source == 'e621':
