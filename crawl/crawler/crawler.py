@@ -21,8 +21,8 @@ class Crawler:
 
     retries = Retry(
         total=5,
-        backoff_factor=0.1,
-        status_forcelist=[500, 502, 503, 504],
+        backoff_factor=0.5,
+        status_forcelist=[104, 500, 502, 503, 504],
     )
 
     def __init__(self,
