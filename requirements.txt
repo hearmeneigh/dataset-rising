@@ -1,5 +1,5 @@
 pymongo==4.4.1
 requests==2.31.0
-throttle==0.2.2
+call_throttle==0.3.0
 furl==2.1.2
 ndjson==0.3.1

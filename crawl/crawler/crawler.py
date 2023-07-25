@@ -1,12 +1,13 @@
 import os
 from typing import Optional
+from datetime import timedelta
 
 from furl import furl
 import ndjson
 from urllib3.util import Retry
 import requests
 from requests.adapters import HTTPAdapter
-import throttle
+from call_throttle import throttle
 import json
 
 class Crawler:
@@ -80,7 +81,7 @@ class Crawler:
         print(f'Crawled {self.cur_index} page(s) and found {self.record_count} record(s)')
 
     # max 3 requests/s
-    @throttle.wrap(1, 3)
+    @throttle(calls=9, period=timedelta(seconds=3))
     def fetch(self):
         url = self.get_url()
 
