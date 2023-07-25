@@ -53,13 +53,7 @@ class Crawler:
     def crawl(self, recover: bool = False):
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
-        recovery_file = self.get_recover_filename()
-
-        if not recover or not os.path.exists(recovery_file) or not os.path.isfile(recovery_file):
-            self.fp = open(self.output_file, 'w')
-        else:
-            self.fp = open(self.output_file, 'a')
-
+        self.fp = open(self.output_file, 'a')
         self.writer = ndjson.writer(self.fp)
         result = True
 
