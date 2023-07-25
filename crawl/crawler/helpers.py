@@ -7,8 +7,9 @@ def get_e621_index_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
         base_url='https://e621.net/posts.json?limit=320',
-        page_type='index',
-        page_field='page'
+        page_type='by_id',
+        page_field='page',
+        page_field_prefix='b'
     )
 
 

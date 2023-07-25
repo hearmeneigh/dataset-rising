@@ -32,7 +32,8 @@ class Crawler:
         page_field: str = 'page',
         result_id_field: str = 'id',
         json_field: Optional[str] = 'posts',
-        next_id: str = ''
+        next_id: Optional[str] = None,
+        page_field_prefix: str = ''
     ):
         self.output_file = output_file
         self.base_url = base_url
@@ -42,6 +43,7 @@ class Crawler:
         self.next_id = next_id
         self.result_id_field = result_id_field
         self.json_field = json_field
+        self.page_field_prefix = page_field_prefix
 
         self.adapter = HTTPAdapter(max_retries=self.retries)
         self.session.mount('http://', self.adapter)
@@ -99,11 +101,13 @@ class Crawler:
     def get_url(self):
         index = self.cur_index if self.page_type == 'index' else self.next_id
 
-        if self.index_type == 'one':
-            index += 1
+        if self.index_type == 'one' and index is not None:
+            index = int(index) + 1
 
         url = furl(self.base_url)
-        url.add({f'{self.page_field}': str(index)})
+
+        if index is not None:
+            url.add({f'{self.page_field}': f'{self.page_field_prefix}{str(index)}'})
 
         return str(url)
 
