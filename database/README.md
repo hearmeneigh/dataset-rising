@@ -11,3 +11,6 @@ The script uses database name `e621_rising` by default. You can change this by s
 
 ## Shutting Down
 1. `./stop-mongodb.sh`
+
+
+## Importing Data

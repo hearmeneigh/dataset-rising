@@ -128,4 +128,4 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
         elif type == 'tags':
             return get_danbooru_tag_crawler(output_file)
 
-    raise Exception(f'Unsupported source (\'{source}\') or type (\'{type}\')')
+    raise NotImplementedError(f'Unsupported source (\'{source}\') or type (\'{type}\')')
