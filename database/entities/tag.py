@@ -14,6 +14,7 @@ class TagPseudoEntity:
     source: Source
     source_id: str
     origin_name: str
+    reference_name: str  # unmodified original name, never used
     category: Category
     post_count: Optional[int]
 
@@ -28,6 +29,7 @@ class TagEntity:
 
     origin_name: str
     category: Category
+    reference_name: str  # unmodified original name, never used
 
     v1_name: str
     v2_name: str

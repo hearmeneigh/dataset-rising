@@ -2,6 +2,7 @@
 tags:
   - alpha_channel
   - alternate_version_at_source
+  - 'alternate_(species)'  # replaced by: alternate_species
   - animated
   - animated_comic
   - animated_png
@@ -12,6 +13,8 @@ tags:
   - better_version_at_source
   - character_name
   - character_request
+  - character
+  - 'character:'
   - collaboration
   - conditional_dnp
   - copyright_request
@@ -45,3 +48,8 @@ tags:
   - unknown_artist_signature
   - url
   - video
+  - invalid_tag
+  - invalid_color
+  - check_source
+  - check_tag_type
+  - invalid_color_(tan)

@@ -14,7 +14,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database/import.py" />
-    <option name="PARAMETERS" value="--input /tmp/e621.net-index.jsonl --tags /tmp/e621.net-tags.jsonl --source e621 --save-tags --remove-old" />
+    <option name="PARAMETERS" value="--posts /tmp/e621.net-index.jsonl --tags /tmp/e621.net-tags.jsonl --source e621 --remove-old" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

@@ -24,7 +24,7 @@ class TagNormalizer:
     # determines which tag gets the preferred no-prefix name
     category_naming_order: Dict[Category, int] = category_naming_order
 
-    def __init__(self, prefilter: Dict[str, bool] = None, symbols: List[str] = None, aspect_ratios: List[str] = None):
+    def __init__(self, prefilter: Dict[str, bool] = None, symbols: List[str] = None, aspect_ratios: List[str] = None, rewrites: Dict[str, dict] = None):
         if prefilter is None:
             prefilter = {}
 
@@ -34,9 +34,13 @@ class TagNormalizer:
         if aspect_ratios is None:
             aspect_ratios = []
 
+        if rewrites is None:
+            rewrites = {}
+
         self.prefilter = prefilter
         self.symbols = symbols
         self.aspect_ratios = aspect_ratios
+        self.rewrites = rewrites
 
     def load(self, read_tag_cb: Callable[[], Optional[TagPseudoEntity]]):
         progress = Progress('Loading tags')
@@ -47,7 +51,17 @@ class TagNormalizer:
             progress.update(tag_count)
 
             if tag.origin_name in self.prefilter:
-                return
+                continue
+
+            if tag.origin_name in self.rewrites:
+                rw = self.rewrites[tag.origin_name]
+
+                if type(rw) is dict:
+                    tag.origin_name = rw.get('name', tag.origin_name)
+                    tag.source_id = rw.get('source_id', tag.source_id)
+                else:
+                    # shortcut
+                    tag.origin_name = rw
 
             v1_tag = self.to_v1_tag(tag)
             v2_tag = self.to_v2_tag(tag)
@@ -82,10 +96,11 @@ class TagNormalizer:
                 # prefer short versions of tags in lower categories (e.g. prefer GENERAL to ARTIST)
                 if self.get_category_naming_order(tag.category) < self.get_category_naming_order(alias_record.category):
                     if TagVersion.V0 not in alias_record.versions:
-                        print(f'Lookup replacement: {tag_alias} -- ID {alias_record.id} => {tag_id}, category {alias_record.category} => {tag.category}')
+                        # print(f'Lookup replacement: {tag_alias} -- ID {alias_record.id} => {tag_id}, category {alias_record.category.value} => {tag.category.value}')
                         self.alias_map[tag_alias] = TagAlias(id=tag_id, category=tag.category, versions=[version], tag=tag, count=tag.post_count)
                     else:
-                        print(f'V0 overrides: {tag_alias}')
+                        # print(f'V0 overrides: {tag_alias}')
+                        pass
             else:
                 if version not in alias_record.versions:
                     alias_record.versions.append(version)
@@ -116,6 +131,7 @@ class TagNormalizer:
         t.v2_short = self.to_v2_tag(tag, short=True)
         t.id_name = t.v2_name
         t.preferred_name = t.v2_name
+        t.reference_name = tag.reference_name
         t.post_count = tag.post_count
         t.timestamp = datetime.now()
 
@@ -128,7 +144,7 @@ class TagNormalizer:
 
         tag_name = self.clean_pseudo_name(pseudo_tag.origin_name)
 
-        cleaned_name = self.strip_specials(tag_name, str(pseudo_tag.category))
+        cleaned_name = self.strip_specials(tag_name, str(pseudo_tag.category.value))
         v1_name = self.to_v1_tag(pseudo_tag)
 
         if v1_name[0:7] == 'symbol:':
@@ -140,7 +156,7 @@ class TagNormalizer:
         suffix = ''
 
         if pseudo_tag.category != Category.GENERAL:
-            suffix = f'_{pseudo_tag.category}'
+            suffix = f'_{pseudo_tag.category.value}'
 
         return f'{cleaned_name}{suffix}'
 
@@ -151,7 +167,7 @@ class TagNormalizer:
         if pseudo_tag.category is None:
             return tag_name
 
-        tag_category = pseudo_tag.category
+        tag_category = pseudo_tag.category.value
 
         if tag_category != Category.GENERAL:
             prefix = f'{tag_category}:'
@@ -165,13 +181,14 @@ class TagNormalizer:
         return f'{prefix}{cleaned_name}'
 
     def normalize(self, tag_version_format: TagVersion):
-        progress = Progress('Normalizing tags')
         tag_count = 0
         tag_total = len(self.id_map)
+        progress = Progress('Normalizing tags', total=tag_total)
+        clashes = {}
 
         for tag in self.id_map.values():
             tag_count += 1
-            progress.update(tag_count, tag_total)
+            progress.update(tag_count)
 
             v1_name = self.to_v1_tag(tag)
             v2_name_short = self.to_v2_tag(tag, short=True)
@@ -193,7 +210,12 @@ class TagNormalizer:
                         old_v2_name_long = self.to_v2_tag(old_tag)
 
                         if old_v2_name_long == v2_name_long:
-                            raise KeyError(old_v2_name_long)
+                            if v2_name_long not in clashes:
+                                clashes[v2_name_long] = True
+                                print(f'CLASH: {tag.reference_name} ({tag.source_id}) / {old_tag.reference_name} ({old_tag.source_id})')
+
+                            continue
+                            # raise KeyError(old_v2_name_long)
 
                         if self.alias_map[old_v2_name_long].tag is not old_tag:
                             raise ValueError(v2_name_long)
@@ -230,10 +252,10 @@ class TagNormalizer:
         return anyascii(pseudo_name.replace('♂', '_male').replace('♀', '_female')).strip().lower()
 
     def get_unique_tag_id(self, tag: Union[TagPseudoEntity, TagEntity]) -> str:
-        return f'{tag.source}___{tag.source_id}'
+        return f'{tag.source.value}___{tag.source_id}'
 
     def get_category_naming_order(self, category: Category) -> int:
-        return category_naming_order[category]
+        return category_naming_order[category.value]
 
     def save(self, write_tag_cb: Callable[[TagEntity], None]):
         for tag in self.id_map.values():

@@ -1,8 +1,37 @@
 from datetime import datetime
 
-from database.utils.enums import Source
+from database.entities.tag import TagEntity, TagPseudoEntity
+from database.utils.enums import Source, Category
 from database.entities.post import PostEntity
-from database.translator.translator import PostTranslator
+from database.translator.translator import PostTranslator, TagTranslator
+
+e621_categories = {
+    0: Category.GENERAL,
+    1: Category.ARTIST,
+    3: Category.COPYRIGHT,
+    4: Category.CHARACTER,
+    5: Category.SPECIES,
+    6: Category.INVALID,
+    7: Category.META,
+    8: Category.LORE
+}
+
+
+class E621TagTranslator(TagTranslator):
+    def translate(self, data: dict) -> TagPseudoEntity:
+        t = TagPseudoEntity()
+
+        t.source = Source.E621
+        t.source_id = str(data['id'])
+        t.origin_name = data['name']
+        t.reference_name = data['name']
+        t.post_count = data['post_count']
+        t.category = self.get_category(data['category'])
+
+        return t
+
+    def get_category(self, e621_category: int) -> Category:
+        return e621_categories.get(e621_category, None)
 
 
 class E621PostTranslator(PostTranslator):

@@ -7,4 +7,8 @@ class Progress:
         self.bar = alive_bar(total, title=title, length=40, enrich_print=True, bar='smooth', spinner='dots_waves')
 
     def update(self, completed: int = None, message: str = None):
-        self.bar(completed, message=message)
+        self.bar(completed)
+
+        if message is not None:
+            self.bar.text(message)
+
