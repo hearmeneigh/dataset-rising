@@ -10,8 +10,7 @@
 
 import argparse
 import json
-from io import TextIOWrapper
-from typing import Optional
+from typing import Optional, TextIO
 
 from database.entities.tag import TagEntity, TagPseudoEntity
 from database.importer.importer import Importer
@@ -56,16 +55,13 @@ tag_normalizer = TagNormalizer(prefilter=prefilter, symbols=symbols, aspect_rati
 save_tag_count = 0
 
 
-def stream_tag(tp: TextIOWrapper) -> Optional[TagPseudoEntity]:
+def stream_tag(tp: TextIO) -> Optional[TagPseudoEntity]:
     line = tp.readline()
 
     if line is None or line == '':
         return None
 
     data = json.loads(line)
-
-    if (data['name'] == 'heart_eyes'):
-        print(data)
 
     return tag_translator.translate(data)
 

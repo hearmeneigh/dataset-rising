@@ -53,3 +53,8 @@ tags:
   - check_source
   - check_tag_type
   - invalid_color_(tan)
+  - .
+  - nameless
+  - nameless_(artist)
+  - omtt
+  - '=omtt'

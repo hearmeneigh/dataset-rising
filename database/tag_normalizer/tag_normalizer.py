@@ -212,7 +212,8 @@ class TagNormalizer:
                         if old_v2_name_long == v2_name_long:
                             if v2_name_long not in clashes:
                                 clashes[v2_name_long] = True
-                                print(f'CLASH: {tag.reference_name} ({tag.source_id}) / {old_tag.reference_name} ({old_tag.source_id})')
+
+                            print(f'Namespace clash: "{tag.reference_name}" ({tag.source_id}) and "{old_tag.reference_name}" ({old_tag.source_id}) cannot fit to the same namespace. Ignoring "{tag.reference_name}". Use rewrite or prefilter rules to adjust.')
 
                             continue
                             # raise KeyError(old_v2_name_long)

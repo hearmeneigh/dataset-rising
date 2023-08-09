@@ -5,7 +5,9 @@ tags:
   - from: <3_pupils
     to: heart_pupils
   - from: <3_ears
-    to: heart_ears
+    to:
+      name: heart_ears
+      source_id: 595485
   - from: ?_block
     to: question_block
   - from: ?!
@@ -308,7 +310,7 @@ tags:
       source_id: 125144
   - from: fuchsia
     to: fuchsia_alt
-  - from: kurogane
+  - from: kurogane_(artist)
     to: kurogane_alt
   - from: darcy
     to: darcy_alt
@@ -351,7 +353,7 @@ tags:
   - from: jinx_(character)
     to: jinx_alt
   - from: carmen_(character)
-    to: carmen
+    to: carmen_alt
   - from: tanya
     to: tanya_alt
   - from: vivienwhite_(artist)
@@ -422,7 +424,7 @@ tags:
     to:
       name: blue_tshirt
       source_id: 1004614
-  - from: =.._(artist)
+  - from: '=.._(artist)'
     to: equals_dot_dot
   - from: mirra-mortas
     to:
@@ -436,3 +438,338 @@ tags:
     to: tkd_alt
   - from: kitch
     to: kitch_alt
+  - from: wulfer
+    to: wulfer_alt
+  - from: a.k.o.t.
+    to: a_k_o_t_
+  - from: re-animator
+    to:
+      name: reanimator
+      source_id: 5927
+  - from: tucker
+    to: tucker_alt
+  - from: drift
+    to: drift_alt
+  - from: neomi_(character)
+    to: neomi_alt
+  - from: iridium_(character)
+    to:
+      name: iridium
+      source_id: 5522
+  - from: shi'ala_(character)
+    to: shi_ala
+  - from: mimi_(character)
+    to: mimi_alt
+  - from: risu-chan
+    to: risu_chan
+  - from: feryl_(character)
+    to: feryl_alt
+  - from: mara_(character)
+    to: mara_alt
+  - from: mag
+    to: mag_alt
+  - from: nickel_(character)
+    to: nickel_alt
+  - from: sura
+    to: sura_alt
+  - from: siri
+    to: siri_apple
+  - from: lis
+    to: lis_alt
+  - from: choo-choo
+    to: choo_choo
+  - from: ryu_(artist)
+    to: ryu_alt
+  - from: kimba_(character)
+    to: kimba_alt
+  - from: hyperion
+    to: hyperion_alt
+  - from: ino_(character)
+    to: ino_alt
+  - from: z-afiro
+    to: z_afiro
+  - from: bento
+    to: bento_alt
+  - from: anja_(character)
+    to: anja_alt
+  - from: niri
+    to: niri_alt
+  - from: zander_(character)
+    to: zander_alt
+  - from: d!
+    to: d_exclamation
+  - from: arteria
+    to: arteria_alt
+  - from: nina
+    to: nina_alt
+  - from: xern_(artist)
+    to: xern_alt
+  - from: syndra
+    to: syndra_alt
+  - from: kitsu_(character)
+    to: kitsu_alt
+  - from: roxxie_(character)
+    to: roxxie_alt
+  - from: glitch_(artist)
+    to: glitch_alt
+  - from: yamii
+    to: yamii_alt
+  - from: elliot
+    to: elliot_alt
+  - from: jek
+    to: jek_alt
+  - from: rooks_(character)
+    to: rooks_alt
+  - from: sierra_(character)
+    to: sierra_alt
+  - from: aside
+    to: aside_alt
+  - from: biscuits
+    to: biscuits_alt
+  - from: apostrophe
+    to: apostrophe_alt
+  - from: shin_(character)
+    to: shin_alt
+  - from: あかり
+    to: akari_alt
+  - from: oden_(artist)
+    to: oden_alt
+  - from: aku_(character)
+    to: aku_alt
+  - from: ja'ren
+    to: ja_ren
+  - from: nini
+    to: nini_alt
+  - from: bb_(artist)
+    to: bb_alt
+  - from: kibby
+    to: kibby_alt
+  - from: li-li
+    to: li_li
+  - from: deimos_(character)
+    to: deimos_alt
+  - from: raya
+    to: raya_alt
+  - from: sa'ru
+    to: sa_ru
+  - from: elektrodot_(character)
+    to: elektrodot_alt
+  - from: lang
+    to: lang_alt
+  - from: vox_(character)
+    to: vox_alt
+  - from: jay
+    to: jay_alt
+  - from: yari
+    to: yari_alt
+  - from: rev
+    to: rev_alt
+  - from: nabi_(character)
+    to: nabi_alt
+  - from: shempu_(artist)
+    to: shempu_alt
+  - from: unistar
+    to: unistar_alt
+  - from: jocelyn_(character)
+    to: jocelyn_alt
+  - from: bahamut_(character)
+    to: bahamut_alt
+  - from: iskar_(character)
+    to: iskar_alt
+  - from: pip_(character)
+    to: pip_alt
+  - from: kit_(character)
+    to: kit_alt
+  - from: strawberry_(dragon)
+    to: strawberry_dragon_alt
+  - from: jd
+    to: jd_alt
+  - from: thorn_(character)
+    to: thorn_alt
+  - from: old-roots
+    to: old_roots
+  - from: spikie_(artist)
+    to: spikie_alt
+  - from: veran
+    to: veran_alt
+  - from: fuzz-wolf
+    to: fuzz_wolf
+  - from: absinthe
+    to: absinthe_alt
+  - from: ruffe_(character)
+    to: ruffe_alt
+  - from: pa'thia
+    to: pa_thia
+  - from: simian
+    to: simian_alt
+  - from: skarn_(character)
+    to: skarn_alt
+  - from: wachi_(character)
+    to:
+      name: wachi
+      source_id: 363177
+  - from: kralthe_(artist)
+    to:
+      name: kralthe
+      source_id: 156248
+  - from: 'nier:_automata'
+    to:
+      name: nier_automata
+      source_id: 493111
+  - from: xion_(character)
+    to:
+      name: xion
+      source_id: 41405
+  - from: teioh_(character)
+    to:
+      name: teioh
+      source_id: 509820
+  - from: tri-optimum
+    to:
+      name: trioptimum
+      source_id: 833619
+  - from: jg-draws
+    to:
+      name: jgdraws_(artist)
+      source_id: 754490
+  - from: m-16
+    to:
+      name: m16
+      source_id: 25495
+  - from: ryderriro_(artist)
+    to:
+      name: ryderriro
+      source_id: 585728
+  - from: ump-45
+    to:
+      name: ump45
+      source_id: 443221
+  - from: cubber_(artist)
+    to:
+      name: cubber
+      source_id: 399826
+  - from: fenkey_(species)
+    to:
+      name: fenkey
+      source_id: 567794
+  - from: source_filmmaker_(copyright)
+    to:
+      name: source_filmmaker
+      source_id: 198432
+  - from: いれみ
+    to:
+      name: iremi
+      source_id: 362932
+  - from: sushi-tomodachi
+    to:
+      name: sushitomodachi
+      source_id: 763329
+  - from: morguntheorc_(artist)
+    to:
+      name: morguntheorc
+      source_id: 413875
+  - from: ellelluieux
+    to:
+      name: elleluieux
+      source_id: 604651
+  - from: elle-lui-eux
+    to:
+      name: elleluieux
+      source_id: 604651
+  - from: ivynathael_(artist)
+    to:
+      name: ivynathael
+      source_id: 671897
+  - from: lucifur_(character)
+    to:
+      name: lucifur
+      source_id: 60565
+  - from: shove!
+    to:
+      name: shove
+      source_id: 91028
+  - from: epickitty_(character)
+    to:
+      name: epickitty
+      source_id: 487748
+  - from: nomad_reverse_(artist)
+    to:
+      name: nomad_reverse
+      source_id: 676190
+  - from: freyskol_(character)
+    to:
+      name: freyskol
+      source_id: 569916
+  - from: crimson-karma
+    to:
+      name: crimsonkarma
+      source_id: 499527
+  - from: 'my_little_pony:_make_your_mark'
+    to:
+      name: my_little_pony_make_your_mark
+      source_id: 1056344
+  - from: resper_(artist)
+    to:
+      name: resper
+      source_id: 388132
+  - from: びびお
+    to:
+      name: bibio
+      source_id: 466411
+  - from: ryokowolf_(character)
+    to:
+      name: ryokowolf
+      source_id: 398278
+  - from: lacertian_(species)
+    to:
+      name: lacertian
+      source_id: 424745
+  - from: mistresssable_(artist)
+    to:
+      name: mistresssable
+      source_id: 208886
+  - from: bow-lingual
+    to:
+      name: bowlingual
+      source_id: 897875
+  - from: surprise!
+    to:
+      name: surprise
+      source_id: 5862
+  - from: b-2_spirit
+    to:
+      name: b2_spirit
+      source_id: 550090
+  - from: b-eau
+    to:
+      name: beau_(artist)
+      source_id: 432462
+  - from: conformitywhore_(artist)
+    to:
+      name: conformitywhore
+      source_id: 405095
+  - from: v-mordecai
+    to:
+      name: vmordecai
+      source_id: 415510
+  - from: b.koal
+    to:
+      name: bkoal
+      source_id: 590252
+  - from: by-kanou
+    to:
+      name: bykanou
+      source_id: 767362
+  - from: コマツコ
+    to:
+      name: komatsuko_(artist)
+      source_id: 417767
+  - from: kerrina_(character)
+    to:
+      name: kerrina
+      source_id: 327799
+  - from: gin_(character)
+    to:
+      name: gin
+      source_id: 27807
+
