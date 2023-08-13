@@ -263,4 +263,10 @@ class TagNormalizer:
             write_tag_cb(tag)
 
     def get(self, tag_name: str) -> Optional[TagEntity]:
-        return self.alias_map.get(tag_name, None)
+        alias = self.alias_map.get(tag_name, None)
+
+        if alias is None:
+            return None
+
+        return alias.tag
+

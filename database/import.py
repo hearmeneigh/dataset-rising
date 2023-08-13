@@ -86,5 +86,5 @@ if not args.skip_save_tags:
 post_translator = get_post_translator(args.source, tag_normalizer)
 post_importer = Importer(db, 'posts', post_translator)
 
-for input_file in args.input:
-    post_importer.import_jsonl(args.input)
+for post_file in args.posts:
+    post_importer.import_jsonl(post_file)

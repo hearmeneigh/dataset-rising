@@ -175,7 +175,7 @@ tags:
   - from: ban_(artist)
     to: ban_alt
   - from: shin_(artist)
-    to: shin_alt
+    to: shin_alt_artist
   - from: kroxy_(character)
     to:
       name: kroxy
@@ -529,7 +529,7 @@ tags:
   - from: apostrophe
     to: apostrophe_alt
   - from: shin_(character)
-    to: shin_alt
+    to: shin_alt_character
   - from: あかり
     to: akari_alt
   - from: oden_(artist)

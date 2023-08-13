@@ -40,7 +40,7 @@ class Importer:
                         'source': record.source,
                         'source_id': record.source_id
                     }, vars(record), upsert=True)
-                except pymongo.errors.Any:
+                except pymongo.errors.PyMongoError as e:
                     mongo_errors += 1
                     print(f'Could not import record on line #{cur_line} of {input_file}: {e}')
                     continue
