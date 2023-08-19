@@ -3,16 +3,18 @@ import pymongo.errors
 
 from pymongo.database import Database
 
-from database.translator.translator import PostTranslator
-from database.utils.progress import Progress
+from tag_normalizer.tag_normalizer import TagNormalizer
+from translator.translator import PostTranslator
+from utils.progress import Progress
 
 
 class Importer:
-    def __init__(self, db: Database, collection: str, translator: PostTranslator):
+    def __init__(self, db: Database, collection: str, translator: PostTranslator, tag_normalizer: TagNormalizer):
         self.translator = translator
         self.db = db
         self.collection = collection
-        self.progress = Progress(title='Importing posts')
+        self.tag_normalizer = tag_normalizer
+        self.progress = Progress(title='Importing posts', units='posts')
 
     def import_jsonl(self, input_file: str):
         collection = self.db[self.collection]
@@ -34,6 +36,7 @@ class Importer:
                     continue
 
                 record = self.translator.translate(data)
+                record.tags.extend(self.tag_normalizer.get_pseudo_tags(record))
 
                 try:
                     collection.replace_one({
@@ -45,4 +48,5 @@ class Importer:
                     print(f'Could not import record on line #{cur_line} of {input_file}: {e}')
                     continue
 
+        self.progress.succeed('Posts imported')
         return cur_line, mongo_errors, json_errors

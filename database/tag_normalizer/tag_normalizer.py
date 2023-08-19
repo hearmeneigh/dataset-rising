@@ -4,10 +4,18 @@ from typing import List, Dict, Union, Optional, Callable
 
 from anyascii import anyascii
 
-from database.utils.enums import Category, category_naming_order
-from database.entities.tag import TagEntity, TagPseudoEntity, TagAlias, TagVersion
-from database.utils.progress import Progress
+from entities.post import PostEntity
+from utils.enums import Category, category_naming_order, Source, Rating
+from entities.tag import TagEntity, TagProtoEntity, TagAlias, TagVersion
+from utils.progress import Progress
 
+scoreAboveMilestones = [250, 500, 1000, 1500, 2000]
+scoreBelowMilestones = [0, 25, 50, 100, 250]
+favAboveMilestones = [1000, 2000, 3000, 4000]
+favBelowMilestones = [25, 50, 100, 250, 500, 1000]
+ratingMilestones = [Rating.SAFE, Rating.QUESTIONABLE, Rating.EXPLICIT]
+
+long_name_categories = [Category.SYMBOL, Category.ASPECT_RATIO, Category.SCORE, Category.FAVORITES, Category.RATING, Category.COMMENTS, Category.VIEWS, Category.DESCRIPTION, Category.RISING]
 
 # Manages v0, v1, v2, and v2 short tag namespaces
 # and mitigates conflicts between the tag names
@@ -20,6 +28,9 @@ class TagNormalizer:
 
     # tag id => TagEntity
     id_map: Dict[str, TagEntity] = {}
+
+    # tag reference_name => TagEntity
+    original_map: Dict[str, TagEntity] = {}
 
     # determines which tag gets the preferred no-prefix name
     category_naming_order: Dict[Category, int] = category_naming_order
@@ -42,49 +53,64 @@ class TagNormalizer:
         self.aspect_ratios = aspect_ratios
         self.rewrites = rewrites
 
-    def load(self, read_tag_cb: Callable[[], Optional[TagPseudoEntity]]):
-        progress = Progress('Loading tags')
+    def load(self, read_tag_cb: Callable[[], Optional[TagProtoEntity]]):
+        progress = Progress(title='Loading tags', units='tags')
         tag_count = 0
 
-        while (tag := read_tag_cb()) is not None:
+        while (proto_tag := read_tag_cb()) is not None:
             tag_count += 1
             progress.update(tag_count)
 
-            if tag.origin_name in self.prefilter:
+            if proto_tag.origin_name in self.prefilter:
                 continue
 
-            if tag.origin_name in self.rewrites:
-                rw = self.rewrites[tag.origin_name]
+            if proto_tag.origin_name in self.rewrites:
+                rw = self.rewrites[proto_tag.origin_name]
 
                 if type(rw) is dict:
-                    tag.origin_name = rw.get('name', tag.origin_name)
-                    tag.source_id = rw.get('source_id', tag.source_id)
+                    proto_tag.origin_name = rw.get('name', proto_tag.origin_name)
+                    proto_tag.source_id = rw.get('source_id', proto_tag.source_id)
                 else:
                     # shortcut
-                    tag.origin_name = rw
+                    proto_tag.origin_name = rw
 
-            v1_tag = self.to_v1_tag(tag)
-            v2_tag = self.to_v2_tag(tag)
-            v2_tag_short = self.to_v2_tag(tag, True)
+            v1_tag = self.to_v1_tag(proto_tag)
+            v2_tag = self.to_v2_tag(proto_tag)
+            v2_tag_short = self.to_v2_tag(proto_tag, True)
 
-            self.add_tag(v1_tag, tag, TagVersion.V1)
-            self.add_tag(v2_tag, tag, TagVersion.V2)
+            if proto_tag.reference_name in self.symbols:
+                proto_tag.category = Category.SYMBOL
+                v1_tag = proto_tag.reference_name
+                v2_tag = proto_tag.reference_name
+                v2_tag_short = proto_tag.reference_name
+
+            if proto_tag.reference_name in self.aspect_ratios:
+                proto_tag.category = Category.ASPECT_RATIO
+                v1_tag = proto_tag.reference_name.replace(':', '_')
+                v2_tag = v1_tag
+                v2_tag_short = v1_tag
+
+            self.add_tag(v1_tag, proto_tag, TagVersion.V1)
+            self.add_tag(v2_tag, proto_tag, TagVersion.V2)
 
             if v2_tag != v2_tag_short:
-                self.add_tag(v2_tag_short, tag, TagVersion.V2)
+                self.add_tag(v2_tag_short, proto_tag, TagVersion.V2)
 
-            self.add_tag(tag.origin_name, tag, TagVersion.V0)
+            self.add_tag(proto_tag.origin_name, proto_tag, TagVersion.V0)
 
-    def add_tag(self, tag_alias: str, pseudo_tag: TagPseudoEntity, version: TagVersion):
+        self.register_pseudo_tags()
+        progress.succeed('Tags loaded')
+
+    def add_tag(self, tag_alias: str, proto_tag: TagProtoEntity, version: TagVersion):
         try:
             tag_alias = self.clean(tag_alias)
-            tag = self.register_tag_reference(pseudo_tag)
-            tag_id = self.get_unique_tag_id(pseudo_tag)
+            tag = self.register_tag_reference(proto_tag)
+            tag_id = self.get_unique_tag_id(proto_tag)
 
             if tag_alias not in self.alias_map:
                 self.alias_map[tag_alias] = TagAlias(
                     id=self.get_unique_tag_id(tag),
-                    category=pseudo_tag.category,
+                    category=proto_tag.category,
                     versions=[version],
                     tag=tag,
                     count=tag.post_count
@@ -105,10 +131,10 @@ class TagNormalizer:
                 if version not in alias_record.versions:
                     alias_record.versions.append(version)
         except Exception as e:
-            print(f'Loading tag {tag_alias} failed: {str(e)} -- {str(pseudo_tag)}')
+            print(f'Loading tag {tag_alias} failed: {str(e)} -- {str(proto_tag)}')
             raise
 
-    def register_tag_reference(self, tag: TagPseudoEntity) -> TagEntity:
+    def register_tag_reference(self, tag: TagProtoEntity) -> TagEntity:
         tag_id = self.get_unique_tag_id(tag)
 
         if tag_id in self.id_map:
@@ -136,44 +162,51 @@ class TagNormalizer:
         t.timestamp = datetime.now()
 
         self.id_map[tag_id] = t
+        self.original_map[tag.reference_name] = t
         return t
 
-    def to_v2_tag(self, pseudo_tag: Union[TagPseudoEntity, TagEntity], short: bool = False) -> str:
-        if pseudo_tag.category is None:
-            return pseudo_tag.origin_name
+    def to_v2_tag(self, proto_tag: Union[TagProtoEntity, TagEntity], short: bool = False) -> str:
+        if proto_tag.category is None:
+            return proto_tag.origin_name
 
-        tag_name = self.clean_pseudo_name(pseudo_tag.origin_name)
+        if proto_tag.category in long_name_categories:
+            return proto_tag.origin_name
 
-        cleaned_name = self.strip_specials(tag_name, str(pseudo_tag.category.value))
-        v1_name = self.to_v1_tag(pseudo_tag)
+        tag_name = self.clean_proto_name(proto_tag.origin_name)
+
+        cleaned_name = self.strip_specials(tag_name, str(proto_tag.category.value))
+        v1_name = self.to_v1_tag(proto_tag)
 
         if v1_name[0:7] == 'symbol:':
-            cleaned_name = pseudo_tag.origin_name
+            cleaned_name = proto_tag.origin_name
 
         if short:
             return cleaned_name
 
         suffix = ''
 
-        if pseudo_tag.category != Category.GENERAL:
-            suffix = f'_{pseudo_tag.category.value}'
+        if proto_tag.category != Category.GENERAL:
+            suffix = f'_{proto_tag.category.value}'
 
         return f'{cleaned_name}{suffix}'
 
-    def to_v1_tag(self, pseudo_tag: Union[TagPseudoEntity, TagEntity]) -> str:
+    def to_v1_tag(self, proto_tag: Union[TagProtoEntity, TagEntity]) -> str:
         prefix = ''
-        tag_name = self.clean_pseudo_name(pseudo_tag.origin_name)
+        tag_name = self.clean_proto_name(proto_tag.origin_name)
 
-        if pseudo_tag.category is None:
+        if proto_tag.category is None:
             return tag_name
 
-        tag_category = pseudo_tag.category.value
+        if proto_tag.category in long_name_categories:
+            return proto_tag.origin_name
+
+        tag_category = proto_tag.category.value
 
         if tag_category != Category.GENERAL:
             prefix = f'{tag_category}:'
 
         cleaned_name = self.strip_specials(tag_name, str(tag_category))
-        special_naming = self.get_special_naming_convention(pseudo_tag)
+        special_naming = self.get_special_naming_convention(proto_tag)
 
         if special_naming is not None:
             cleaned_name = special_naming
@@ -183,7 +216,7 @@ class TagNormalizer:
     def normalize(self, tag_version_format: TagVersion):
         tag_count = 0
         tag_total = len(self.id_map)
-        progress = Progress('Normalizing tags', total=tag_total)
+        progress = Progress('Normalizing tags', units='tags')
         clashes = {}
 
         for tag in self.id_map.values():
@@ -199,7 +232,7 @@ class TagNormalizer:
             elif tag_version_format == TagVersion.V1:
                 tag.preferred_name = v1_name
             else:
-                if v2_name_short in self.alias_map and self.alias_map[v2_name_short] is tag:
+                if v2_name_short in self.alias_map and self.alias_map[v2_name_short].tag is tag:
                     tag.preferred_name = v2_name_short
                 else:
                     if v2_name_long not in self.alias_map:
@@ -229,9 +262,13 @@ class TagNormalizer:
                             count=tag.post_count
                         )
 
+                        old_tag.preferred_name = old_v2_name_long
+
                     tag.preferred_name = v2_name_long
 
-    def get_special_naming_convention(self, tag: Union[TagPseudoEntity, TagEntity]) -> Optional[str]:
+        progress.succeed('Tags normalized')
+
+    def get_special_naming_convention(self, tag: Union[TagProtoEntity, TagEntity]) -> Optional[str]:
         if tag.category == Category.META and tag.origin_name in self.aspect_ratios:
             cleaned = tag.origin_name.replace(':', '_')
             return f'aspect_ratio:{cleaned}'
@@ -244,15 +281,15 @@ class TagNormalizer:
     def strip_specials(self, tag_name: str, category_name: str) -> str:
         tag_name = tag_name.replace(f'_({category_name})', '').replace('_(western_artist)', '')
         full_name = re.sub(r'[^a-z0-9_/]', '', tag_name)
-        return re.sub(r'_{2,10}', '_', full_name.strip('_'))
+        return re.sub(r'_{2,32}', '_', full_name.strip('_'))
 
     def clean(self, tag: str) -> str:
         return tag.strip().lower() ## no regex here, so it's v0 compatible
 
-    def clean_pseudo_name(self, pseudo_name: str) -> str:
-        return anyascii(pseudo_name.replace('♂', '_male').replace('♀', '_female')).strip().lower()
+    def clean_proto_name(self, proto_name: str) -> str:
+        return anyascii(proto_name.replace('♂', '_male').replace('♀', '_female')).strip().lower()
 
-    def get_unique_tag_id(self, tag: Union[TagPseudoEntity, TagEntity]) -> str:
+    def get_unique_tag_id(self, tag: Union[TagProtoEntity, TagEntity]) -> str:
         return f'{tag.source.value}___{tag.source_id}'
 
     def get_category_naming_order(self, category: Category) -> int:
@@ -262,6 +299,9 @@ class TagNormalizer:
         for tag in self.id_map.values():
             write_tag_cb(tag)
 
+    def get_by_original_name(self, tag_name: str) -> Optional[TagEntity]:
+        return self.original_map.get(tag_name, None)
+
     def get(self, tag_name: str) -> Optional[TagEntity]:
         alias = self.alias_map.get(tag_name, None)
 
@@ -270,3 +310,103 @@ class TagNormalizer:
 
         return alias.tag
 
+    def get_pseudo_tags(self, post: PostEntity) -> List[str]:
+        score = post.score
+        favorites = post.favorites_count
+        rating = post.rating
+
+        tags = []
+
+        for threshold in scoreAboveMilestones:
+            if score > threshold:
+                tags.append(f'score_above_{threshold}')
+
+        for threshold in scoreBelowMilestones:
+            if score < threshold:
+                tags.append(f'score_below_{threshold}')
+
+        for threshold in favAboveMilestones:
+            if favorites > threshold:
+                tags.append(f'favorites_above_{threshold}')
+
+        for threshold in favBelowMilestones:
+            if favorites < threshold:
+                tags.append(f'favorites_below_{threshold}')
+
+        if rating == Rating.SAFE:
+            tags.append(f'rating_safe')
+
+        if rating == Rating.QUESTIONABLE:
+            tags.append(f'rating_questionable')
+
+        if rating == Rating.EXPLICIT:
+            tags.append(f'rating_explicit')
+
+        if score > 1500 and favorites > 3000:
+            tags.append('rising_masterpiece')
+
+        if score is not None and score < 10 and favorites is not None and favorites < 10:
+            tags.append('rising_unpopular')
+
+        return tags
+
+    def register_pseudo_tags(self):
+        for threshold in scoreAboveMilestones:
+            self.add_tag(f'score_above_{threshold}', TagProtoEntity(
+                origin_name=f'score_above_{threshold}',
+                reference_name=f'score_above_{threshold}',
+                category=Category.SCORE,
+                source=Source.RISING,
+                source_id=f'score_above_{threshold}',
+                post_count=0
+            ), TagVersion.V2)
+
+        for threshold in scoreBelowMilestones:
+            self.add_tag(f'score_below_{threshold}', TagProtoEntity(
+                origin_name=f'score_below_{threshold}',
+                reference_name=f'score_below_{threshold}',
+                category=Category.SCORE,
+                source=Source.RISING,
+                source_id=f'score_below_{threshold}',
+                post_count=0
+            ), TagVersion.V2)
+
+        for threshold in favAboveMilestones:
+            self.add_tag(f'favorites_above_{threshold}', TagProtoEntity(
+                origin_name=f'favorites_above_{threshold}',
+                reference_name=f'favorites_above_{threshold}',
+                category=Category.FAVORITES,
+                source=Source.RISING,
+                source_id=f'favorites_above_{threshold}',
+                post_count=0
+            ), TagVersion.V2)
+
+        for threshold in favBelowMilestones:
+            self.add_tag(f'favorites_below_{threshold}', TagProtoEntity(
+                origin_name=f'favorites_below_{threshold}',
+                reference_name=f'favorites_below_{threshold}',
+                category=Category.FAVORITES,
+                source=Source.RISING,
+                source_id=f'favorites_below_{threshold}',
+                post_count=0
+            ), TagVersion.V2)
+
+        for rating in ratingMilestones:
+            self.add_tag(f'rating_{rating}', TagProtoEntity(
+                origin_name=f'rating_{rating}',
+                reference_name=f'rating_{rating}',
+                category=Category.RATING,
+                source=Source.RISING,
+                source_id=f'rating_{rating}',
+                post_count=0
+            ), TagVersion.V2)
+
+        for rising_type in ['masterpiece', 'unpopular']:
+            self.add_tag(f'rising_{rising_type}', TagProtoEntity(
+                origin_name=f'rising_{rising_type}',
+                reference_name=f'rising_{rising_type}',
+                category=Category.RISING,
+                source=Source.RISING,
+                source_id=f'rising_{rising_type}',
+                post_count=0
+            ), TagVersion.V2)

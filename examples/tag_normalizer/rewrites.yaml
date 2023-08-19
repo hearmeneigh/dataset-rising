@@ -20,16 +20,19 @@ tags:
     to: disney_plus
   - from: incogneat-o
     to: incogneat_o
-  - from: '20:17'
-    to: '20_17'
-  - from: '19:20'
-    to: '19_20'
-  - from: '20:19'
-    to: '20_19'
-  - from: '19:18'
-    to: '19_18'
-  - from: '19:11'
-    to: '19_11'
+  - from: 'f/a-18'
+    to: fa18
+
+#  - from: '20:17'
+#    to: '20_17'
+#  - from: '19:20'
+#    to: '19_20'
+#  - from: '20:19'
+#    to: '20_19'
+#  - from: '19:18'
+#    to: '19_18'
+#  - from: '19:11'
+#    to: '19_11'
 
   # duplicate tags & namespace conflicts
   - from: blaze_(wolf)

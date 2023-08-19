@@ -12,6 +12,7 @@ posts.create_index(['source_id', 'source'], unique=True)
 posts.create_index(['origin_urls'], unique=False, sparse=True)
 posts.create_index(['tags'])
 posts.create_index(['origin_md5'])
+posts.create_index(['image_ratio'])
 
 tags = db.create_collection('tags')
 tags.create_index(['source_id', 'source'], unique=True)

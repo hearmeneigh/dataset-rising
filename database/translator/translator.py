@@ -1,9 +1,9 @@
 from typing import Union, List, Optional
 
-from database.entities.implication import ImplicationEntity
-from database.entities.post import PostEntity
-from database.entities.tag import TagEntity, TagPseudoEntity
-from database.tag_normalizer.tag_normalizer import TagNormalizer
+from entities.implication import ImplicationEntity
+from entities.post import PostEntity
+from entities.tag import TagEntity, TagProtoEntity
+from tag_normalizer.tag_normalizer import TagNormalizer
 
 
 class Translator:
@@ -24,7 +24,7 @@ class PostTranslator(Translator):
         return included_tags
 
     def normalize_tag(self, tag_name) -> Optional[str]:
-        tag = self.tag_normalizer.get(tag_name)
+        tag = self.tag_normalizer.get_by_original_name(tag_name)
 
         if tag is None:
             return None
@@ -33,7 +33,7 @@ class PostTranslator(Translator):
 
 
 class TagTranslator(Translator):
-    def translate(self, data: dict) -> TagPseudoEntity:
+    def translate(self, data: dict) -> TagProtoEntity:
         raise NotImplementedError()
 
 

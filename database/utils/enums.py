@@ -14,6 +14,9 @@ category_naming_order = {
     'score': 9,
     'comments': 10,
     'aspect_ratio': 11,
+    'rising': 12,
+    'description': 13,
+    'views': 14,
     'invalid': 100
 }
 
@@ -31,6 +34,7 @@ class Source(str, Enum):
     E621 = 'e621',
     GELBOORU = 'gelbooru',
     DANBOORU = 'danbooru'
+    RISING = 'rising'
 
 
 class Rating(str, Enum):
@@ -55,5 +59,6 @@ class Category(str, Enum):
     COMMENTS = 'comments'
     VIEWS = 'views'
     DESCRIPTION = 'description'
+    RISING = 'rising'
     INVALID = 'invalid'
 

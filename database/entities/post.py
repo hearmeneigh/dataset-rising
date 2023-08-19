@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from database.utils.enums import Source, Rating, Format
+from utils.enums import Source, Rating, Format
 
 
 class PostEntity:

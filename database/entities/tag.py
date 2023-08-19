@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 
-from database.utils.enums import Source, Category
+from utils.enums import Source, Category
 
 
 class AlternativeTagSource:
@@ -10,13 +10,21 @@ class AlternativeTagSource:
     source: Source
 
 
-class TagPseudoEntity:
+class TagProtoEntity:
     source: Source
     source_id: str
     origin_name: str
     reference_name: str  # unmodified original name, never used
     category: Category
     post_count: Optional[int]
+
+    def __init__(self, source: Source, source_id: str, origin_name: str, reference_name: str, category: Category, post_count: Optional[int]):
+        self.source = source
+        self.source_id = source_id
+        self.origin_name = origin_name
+        self.reference_name = reference_name
+        self.category = category
+        self.post_count = post_count
 
 
 class TagEntity:

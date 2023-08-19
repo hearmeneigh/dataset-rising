@@ -1,7 +1,7 @@
-from database.utils.enums import Source
-from database.tag_normalizer.tag_normalizer import TagNormalizer
-from database.translator.e621_translator import E621PostTranslator, E621TagTranslator
-from database.translator.translator import PostTranslator, TagTranslator
+from utils.enums import Source
+from tag_normalizer.tag_normalizer import TagNormalizer
+from translator.e621_translator import E621PostTranslator, E621TagTranslator
+from translator.translator import PostTranslator, TagTranslator
 
 
 def get_post_translator(source: Source, tag_normalizer: TagNormalizer) -> PostTranslator:

@@ -12,13 +12,13 @@ import argparse
 import json
 from typing import Optional, TextIO
 
-from database.entities.tag import TagEntity, TagPseudoEntity
-from database.importer.importer import Importer
-from database.tag_normalizer.tag_normalizer import TagNormalizer
-from database.translator.helpers import get_post_translator, get_tag_translator
-from database.utils.db_utils import connect_to_db
-from database.utils.load_yaml import load_yaml
-from database.utils.progress import Progress
+from entities.tag import TagEntity, TagProtoEntity
+from importer.importer import Importer
+from tag_normalizer.tag_normalizer import TagNormalizer
+from translator.helpers import get_post_translator, get_tag_translator
+from utils.db_utils import connect_to_db
+from utils.load_yaml import load_yaml
+from utils.progress import Progress
 
 parser = argparse.ArgumentParser(prog='Import', description='Import index and metadata from e621, gelbooru, and danbooru')
 
@@ -55,7 +55,7 @@ tag_normalizer = TagNormalizer(prefilter=prefilter, symbols=symbols, aspect_rati
 save_tag_count = 0
 
 
-def stream_tag(tp: TextIO) -> Optional[TagPseudoEntity]:
+def stream_tag(tp: TextIO) -> Optional[TagProtoEntity]:
     line = tp.readline()
 
     if line is None or line == '':
@@ -77,14 +77,16 @@ def save_tag(tag: TagEntity):
     save_tags_progress.update()
     db['tags'].replace_one({'source': tag.source, 'source_id': tag.source_id}, vars(tag), upsert=True)
 
+
 if not args.skip_save_tags:
-    save_tags_progress = Progress('Importing tags', total=len(tag_normalizer.id_map))
+    save_tags_progress = Progress(title='Saving tags', units='tags')
     tag_normalizer.save(lambda tag: save_tag(tag))
+    save_tags_progress.succeed('Tags saved')
 
 
 # process posts
 post_translator = get_post_translator(args.source, tag_normalizer)
-post_importer = Importer(db, 'posts', post_translator)
+post_importer = Importer(db, 'posts', post_translator, tag_normalizer)
 
 for post_file in args.posts:
     post_importer.import_jsonl(post_file)

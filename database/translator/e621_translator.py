@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from database.entities.tag import TagEntity, TagPseudoEntity
-from database.utils.enums import Source, Category
-from database.entities.post import PostEntity
-from database.translator.translator import PostTranslator, TagTranslator
+from entities.tag import TagProtoEntity
+from utils.enums import Source, Category
+from entities.post import PostEntity
+from translator.translator import PostTranslator, TagTranslator
 
 e621_categories = {
     0: Category.GENERAL,
@@ -18,17 +18,15 @@ e621_categories = {
 
 
 class E621TagTranslator(TagTranslator):
-    def translate(self, data: dict) -> TagPseudoEntity:
-        t = TagPseudoEntity()
-
-        t.source = Source.E621
-        t.source_id = str(data['id'])
-        t.origin_name = data['name']
-        t.reference_name = data['name']
-        t.post_count = data['post_count']
-        t.category = self.get_category(data['category'])
-
-        return t
+    def translate(self, data: dict) -> TagProtoEntity:
+        return TagProtoEntity(
+            source=Source.E621,
+            source_id=str(data['id']),
+            origin_name=data['name'],
+            reference_name=data['name'],
+            post_count=data['post_count'],
+            category=self.get_category(data['category'])
+        )
 
     def get_category(self, e621_category: int) -> Category:
         return e621_categories.get(e621_category, None)
@@ -39,7 +37,9 @@ class E621PostTranslator(PostTranslator):
         file = data.get('file', {})
         preview = data.get('preview', {})
         sample = data.get('sample', {})
-        score = data.get('score', {})
+        score = int(data.get('score', {}).get('total', 0))
+        favorites = int(data['fav_count'])
+        comments = int(data['comment_count'])
 
         p = PostEntity()
 
@@ -47,7 +47,9 @@ class E621PostTranslator(PostTranslator):
         p.source_id = str(data['id'])
 
         p.rating = data['rating']
-        p.tags = self.normalize_tags(data['tags'])
+
+        all_tags = [tag for tags in data['tags'].values() for tag in tags]
+        p.tags = self.normalize_tags(all_tags)
 
         p.description = data['description']
 
@@ -59,7 +61,7 @@ class E621PostTranslator(PostTranslator):
         p.image_url = file.get('url')
         p.image_width = file.get('width')
         p.image_height = file.get('height')
-        p.image_ratio = p.image_width / p.image_height
+        p.image_ratio = round(p.image_width / p.image_height, 2)
 
         p.small_url = preview.get('url')
         p.small_width = preview.get('width')
@@ -69,9 +71,9 @@ class E621PostTranslator(PostTranslator):
         p.medium_width = sample.get('width')
         p.medium_height = sample.get('height')
 
-        p.score = int(score.get('total', 0))
-        p.favorites_count = int(data['fav_count'])
-        p.comment_count = int(data['comment_count'])
+        p.score = score
+        p.favorites_count = favorites
+        p.comment_count = comments
         # view count not available
 
         p.created_at = datetime.strptime(data['created_at'], '%Y-%m-%dT%H:%M:%S.%f%z')
