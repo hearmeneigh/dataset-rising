@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>Gallery: {{ title }}</title>
+    <style>
+        li img {
+            max-width: 150px;
+            max-height: 150px;
+        }
+
+        li {
+            float: left;
+            list-style: none;
+            margin-left: 10px;
+            width: 150px;
+            height: 150px;
+        }
+
+        h3 {
+            clear: both;
+            margin-top: 2rem;
+        }
+
+        ul {
+            padding: 0;
+            margin: 0;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+
+{% for tag in tags %}
+<h3>{{ tag.title }}</h3>
+
+{% if tag.images %}
+  <ul>
+      {% for im in tag.images %}
+      <li>
+        <a href="{{ im.image_url }}" target="_blank">
+            <img alt="{{ im.source }}: #{{ im.source_id }}" src="{{ im.small_url }}" />
+        </a>
+      </li>
+      {% endfor %}
+  </ul>
+{% else %}
+    <p><i>No images found.</i></p>
+{% endif %}
+
+{% endfor %}
+
+{% if pagination %}
+<div>
+    {% if pagination.next %}
+    <a href="{{ pagination.next }}">Next &gt;</a>
+    {% endif %}
+    {% if pagination.next and pagination.prev %} | {% endif %}
+    {% if pagination.prev %}
+    <a href="{{ pagination.prev }}">&lt; Prev</a>
+    {% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>

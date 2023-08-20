@@ -1,8 +1,12 @@
 # these tags are omitted from import
 tags:
+  - '.'
+  - '=omtt'
+  - 'alternate_(species)'  # replaced by: alternate_species
+  - 'character:'
+  - 'm_(ff)'
   - alpha_channel
   - alternate_version_at_source
-  - 'alternate_(species)'  # replaced by: alternate_species
   - animated
   - animated_comic
   - animated_png
@@ -11,11 +15,13 @@ tags:
   - artist_request
   - avoid_posting
   - better_version_at_source
+  - character
   - character_name
   - character_request
-  - character
-  - 'character:'
+  - check_source
+  - check_tag_type
   - collaboration
+  - compression_artifacts
   - conditional_dnp
   - copyright_request
   - description_request
@@ -24,8 +30,14 @@ tags:
   - epilepsy_warning
   - flash
   - huge_filesize
+  - invalid_color
+  - invalid_color_(tan)
+  - invalid_tag
   - lol_comments
   - meme
+  - nameless
+  - nameless_(artist)
+  - omtt
   - patreon_exclusive
   - patreon_logo
   - patreon_username
@@ -33,6 +45,7 @@ tags:
   - sound
   - sound_warning
   - source_request
+  - species_request
   - story
   - story_at_source
   - story_in_description
@@ -48,14 +61,4 @@ tags:
   - unknown_artist_signature
   - url
   - video
-  - invalid_tag
-  - invalid_color
-  - check_source
-  - check_tag_type
-  - invalid_color_(tan)
-  - '.'
-  - nameless
-  - nameless_(artist)
-  - omtt
-  - '=omtt'
-  - 'm_(ff)'
+  - ych_result

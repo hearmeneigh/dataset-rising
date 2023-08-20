@@ -1,4 +1,20 @@
 # these tags will be automatically renamed
+#
+# Format
+#
+# rename only:
+# ```yaml
+# - from: str
+#   to: str
+# ```
+#
+# rename and merge with another tag:
+# ```yaml
+# - from: str
+#   to:
+#     name: str
+#     source_id: str
+# ```yaml
 tags:
   - from: <3_eyes
     to: heart_eyes
@@ -23,18 +39,8 @@ tags:
   - from: 'f/a-18'
     to: fa18
 
-#  - from: '20:17'
-#    to: '20_17'
-#  - from: '19:20'
-#    to: '19_20'
-#  - from: '20:19'
-#    to: '20_19'
-#  - from: '19:18'
-#    to: '19_18'
-#  - from: '19:11'
-#    to: '19_11'
-
   # duplicate tags & namespace conflicts
+
   - from: blaze_(wolf)
     to:
       name: blaze_wolf

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Crawl" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="Preview" type="PythonConfigurationType" factoryName="Python">
     <module name="e621-rising" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -8,13 +8,13 @@
     </envs>
     <option name="SDK_HOME" value="$PROJECT_DIR$/venv/bin/python" />
     <option name="SDK_NAME" value="Python 3.9 (e621-rising)" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/crawl" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/database" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/crawl/crawl.py" />
-    <option name="PARAMETERS" value="--output /tmp/output.jsonl --type search --source e621 --query &quot;meesh&quot;" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database/preview.py" />
+    <option name="PARAMETERS" value="--selector ../examples/select/positive/artists.yaml --image-format jpg --image-format png --output /tmp/preview-test --limit 10 --output-format html --template ../examples/preview/preview.html.jinja" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

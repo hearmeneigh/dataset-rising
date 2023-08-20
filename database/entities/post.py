@@ -1,10 +1,15 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from utils.enums import Source, Rating, Format
 
 
 class PostEntity:
+    def __init__(self, post: Optional[Dict[str, any]] = None):
+        if post is not None:
+            for key in post:
+                setattr(self, key, post[key])
+
     source: Source
     source_id: str
 
@@ -38,4 +43,3 @@ class PostEntity:
 
     created_at: Optional[datetime]
     timestamp: datetime
-

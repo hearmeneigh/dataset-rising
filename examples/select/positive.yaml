@@ -1,0 +1,24 @@
+# This selector produces a set of *positive samples* of which
+# suitability we have moderate confidence.
+#
+# The final dataset will be a combination of:
+#   - X samples from 'curated' selector
+#   - Y samples from 'positive' selector
+#   - Z samples from 'negative' selector
+
+include:
+  - !include positive/artists.yaml
+  - equine_penis
+  - canine_penis
+  - flared_penis
+  - mottled_penis
+  - equine_dildo
+  - animal_dildo
+  - meta:digital_painting_artwork
+  - meta:digital_drawing_artwork
+
+exclude:
+  - score:below_75
+  - favorites:below_200
+  - meta:animated
+  - meta:comic

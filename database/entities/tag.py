@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from utils.enums import Source, Category
 
@@ -28,6 +28,11 @@ class TagProtoEntity:
 
 
 class TagEntity:
+    def __init__(self, tag: Optional[Dict[str, any]] = None):
+        if tag is not None:
+            for key in tag:
+                setattr(self, key, tag[key])
+
     source: Source
     source_id: str
 
