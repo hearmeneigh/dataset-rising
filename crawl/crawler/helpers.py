@@ -25,7 +25,7 @@ def get_e621_search_crawler(output_file: str, search_query: str):
 def get_e621_tag_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
-        base_url='https://e621.net/tags.json?limit=320&search[order]=count',
+        base_url='https://e621.net/tags.json?limit=320&search[order]=date',
         page_type='by_id',
         page_field='page',
         page_field_prefix='b',
