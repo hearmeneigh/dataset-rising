@@ -45,9 +45,13 @@ rewrites = {tag['from']: tag['to'] for tag in load_yaml(args.rewrites).get('tags
 
 # clean database?
 if args.remove_old:
-    db['posts'].delete_many({})
-    db['tags'].delete_many({})
-    db['implications'].delete_many({})
+    progress = Progress('Cleaning database', 'collections')
+
+    for collection in ['posts', 'tags', 'implications']:
+        progress.update()
+        db[collection].delete_many()
+
+    progress.succeed('Database cleaned')
 
 # process tags
 tag_translator = get_tag_translator(args.source)

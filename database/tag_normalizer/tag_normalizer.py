@@ -392,12 +392,21 @@ class TagNormalizer:
             ), TagVersion.V2)
 
         for rating in ratingMilestones:
-            self.add_tag(f'rating_{rating}', TagProtoEntity(
-                origin_name=f'rating_{rating}',
-                reference_name=f'rating_{rating}',
+            if rating == Rating.EXPLICIT:
+                rating_str = 'explicit'
+            elif rating == Rating.QUESTIONABLE:
+                rating_str = 'questionable'
+            elif rating == Rating.SAFE:
+                rating_str = 'safe'
+            else:
+                rating_str = 'unknown'
+
+            self.add_tag(f'rating_{rating_str}', TagProtoEntity(
+                origin_name=f'rating_{rating_str}',
+                reference_name=f'rating_{rating_str}',
                 category=Category.RATING,
                 source=Source.RISING,
-                source_id=f'rating_{rating}',
+                source_id=f'rating_{rating_str}',
                 post_count=0
             ), TagVersion.V2)
 

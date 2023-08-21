@@ -3,6 +3,8 @@
 import argparse
 import os
 from typing import Generator, List, Union, Dict
+from bson import json_util
+import json
 
 import jinja2
 import ndjson
@@ -54,7 +56,9 @@ def save_results_to_jsonl(path: str, results: Union[Dict[str, List[PostEntity]],
 
         if isinstance(results, Generator):
             for post in results:
-                writer.writerow(vars(post))
+                cleaned = json.loads(json_util.dumps(vars(post)))
+
+                writer.writerow(cleaned)
         else:
             for category, category_key in results:
                 writer.writerow({

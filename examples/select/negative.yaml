@@ -31,7 +31,7 @@ include:
   - meta:marker_artwork
 
 exclude:
-  - score:below_100
-  - favorites:below_250
+  - score_below_100
+  - favorites_below_250
   - meta:comic
   - meta:animated

@@ -62,7 +62,15 @@ class Selector:
         prefixes = ['v1', 'v2', 'preferred']
 
         try:
-            (tag_prefix, tag_body) = tag_name.split(':', 2)
+            parts = tag_name.split(':', 2)
+
+            if len(parts) < 2:
+                tag_prefix = None
+                tag_body = tag_name
+            else:
+                tag_prefix = parts[0]
+                tag_body = ':'.join(parts[1:])
+
         except ValueError:
             tag_prefix = None
             tag_body = tag_name
@@ -73,7 +81,7 @@ class Selector:
             if tag_prefix == 'preferred' and tag_name in self.tag_map:
                 return self.tag_map[tag_name]
 
-            selector = {f'{tag_prefix}_name': tag_name}
+            selector = {f'{tag_prefix}_name': tag_body}
         else:
             tag_name = tag_name
             selector = {
@@ -144,7 +152,7 @@ class Selector:
 
                 yield p
 
-                if post_count >= limit:
+                if limit is not None and post_count >= limit:
                     break
             except Exception as e:
                 print(f'Could not load post #{post.get("source_id")} ({post.get("source")}) – skipping: {str(e)}')

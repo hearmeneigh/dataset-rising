@@ -18,7 +18,7 @@ include:
   - meta:digital_drawing_artwork
 
 exclude:
-  - score:below_75
-  - favorites:below_200
+  - score_below_75
+  - favorites_below_200
   - meta:animated
   - meta:comic
