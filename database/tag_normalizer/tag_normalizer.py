@@ -183,6 +183,9 @@ class TagNormalizer:
         t.post_count = tag.post_count
         t.timestamp = datetime.now()
 
+        if t.v1_name == '' or t.v2_name == '' or t.v2_short == '' or t.preferred_name == '':
+            print(f'Tag converts to empty tag name: {str(tag.origin_name)}')
+
         self.id_map[tag_id] = t
         self.original_map[tag.reference_name] = t
         return t

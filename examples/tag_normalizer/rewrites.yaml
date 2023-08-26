@@ -26,8 +26,6 @@ tags:
       source_id: 595485
   - from: ?_block
     to: question_block
-  - from: ?!
-    to: interrobang
   - from: ?_face
     to: anonymous_face
   - from: zootopia+
@@ -38,6 +36,10 @@ tags:
     to: incogneat_o
   - from: 'f/a-18'
     to: fa18
+  - from: '._(artist)'
+    to: period_artist
+  - from: '???_(artist)'
+    to: question_question_question_artist
 
   # duplicate tags & namespace conflicts
 
@@ -65,6 +67,8 @@ tags:
     to: 'no_ra'
   - from: '!!_(artist)'
     to: 'exclamation_exclamation_artist'
+  - from: '..._(artist)'
+    to: 'ellipsis_artist'
 
 #  - from: blaze_(wolf)
 #    to:
