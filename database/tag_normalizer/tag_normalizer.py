@@ -56,15 +56,34 @@ class TagNormalizer:
     def load(self, read_tag_cb: Callable[[], Optional[TagProtoEntity]]):
         progress = Progress(title='Loading tags', units='tags')
         tag_count = 0
+        prefilter_count = 0
+        recategorize_count = 0
+        symbol_count = 0
+        aspect_ratio_count = 0
+        rewrite_count = 0
 
         while (proto_tag := read_tag_cb()) is not None:
             tag_count += 1
             progress.update(tag_count)
 
-            if proto_tag.origin_name in self.prefilter:
+            if proto_tag.category == Category.INVALID:
                 continue
 
+            if proto_tag.origin_name in self.prefilter:
+                prefilter_count += 1
+                continue
+
+            if proto_tag.category == Category.GENERAL:
+                for category in [Category.ARTIST, Category.CHARACTER, Category.COPYRIGHT, Category.SPECIES]:
+                    if re.match(r'^.*_\(' + re.escape(category) + r'\)$', proto_tag.origin_name) or re.match(r'^.*_' + re.escape(category) + r'$', proto_tag.origin_name):
+                        # proto_tag.reference_name = proto_tag.reference_name.replace(f'_({category})', '')
+                        # proto_tag.origin_name = proto_tag.origin_name.replace(f'_({category})', '')
+                        recategorize_count += 1
+                        proto_tag.category = category
+                        proto_tag.renamed = True
+
             if proto_tag.origin_name in self.rewrites:
+                rewrite_count += 1
                 rw = self.rewrites[proto_tag.origin_name]
 
                 if type(rw) is dict:
@@ -83,12 +102,14 @@ class TagNormalizer:
                 v1_tag = proto_tag.reference_name
                 v2_tag = proto_tag.reference_name
                 v2_tag_short = proto_tag.reference_name
+                symbol_count += 1
 
             if proto_tag.reference_name in self.aspect_ratios:
                 proto_tag.category = Category.ASPECT_RATIO
                 v1_tag = proto_tag.reference_name.replace(':', '_')
                 v2_tag = v1_tag
                 v2_tag_short = v1_tag
+                aspect_ratio_count += 1
 
             self.add_tag(v1_tag, proto_tag, TagVersion.V1)
             self.add_tag(v2_tag, proto_tag, TagVersion.V2)
@@ -99,7 +120,7 @@ class TagNormalizer:
             self.add_tag(proto_tag.origin_name, proto_tag, TagVersion.V0)
 
         self.register_pseudo_tags()
-        progress.succeed('Tags loaded')
+        progress.succeed(f'{tag_count} tags loaded; {prefilter_count} filtered, {rewrite_count} rewritten, and {recategorize_count} recategorized; {symbol_count} symbols and {aspect_ratio_count} aspect ratios')
 
     def add_tag(self, tag_alias: str, proto_tag: TagProtoEntity, version: TagVersion):
         try:
@@ -113,7 +134,8 @@ class TagNormalizer:
                     category=proto_tag.category,
                     versions=[version],
                     tag=tag,
-                    count=tag.post_count
+                    count=tag.post_count,
+                    proto_tag=proto_tag
                 )
 
             alias_record = self.alias_map[tag_alias]
@@ -218,8 +240,10 @@ class TagNormalizer:
         tag_total = len(self.id_map)
         progress = Progress('Normalizing tags', units='tags')
         clashes = {}
+        significant_tag_post_count_threshold = 1
+        merge_count = 0
 
-        for tag in self.id_map.values():
+        for tag in self.id_map.copy().values():
             tag_count += 1
             progress.update(tag_count)
 
@@ -234,39 +258,114 @@ class TagNormalizer:
             else:
                 if v2_name_short in self.alias_map and self.alias_map[v2_name_short].tag is tag:
                     tag.preferred_name = v2_name_short
-                else:
-                    if v2_name_long not in self.alias_map:
-                        raise KeyError(v2_name_long)
 
-                    if self.alias_map[v2_name_long].tag is not tag:
-                        old_tag = self.alias_map[v2_name_long].tag
-                        old_v2_name_long = self.to_v2_tag(old_tag)
+                if v2_name_long not in self.alias_map:
+                    raise KeyError(v2_name_long)
 
-                        if old_v2_name_long == v2_name_long:
-                            if v2_name_long not in clashes:
-                                clashes[v2_name_long] = True
+                if self.alias_map[v2_name_long].tag is not tag:
+                    old_tag = self.alias_map[v2_name_long].tag
+                    old_v2_name_long = self.to_v2_tag(old_tag)
 
-                            print(f'Namespace clash: "{tag.reference_name}" ({tag.source_id}) and "{old_tag.reference_name}" ({old_tag.source_id}) cannot fit to the same namespace. Ignoring "{tag.reference_name}". Use rewrite or prefilter rules to adjust.')
+                    if old_v2_name_long == v2_name_long:
+                        clashes[v2_name_long] = True
+                        merge_count += 1
+
+                        # can be merged?
+                        if tag.v2_name == old_tag.v2_name and tag.category == old_tag.category:
+                            removed_tag = tag if tag.post_count <= old_tag.post_count else old_tag
+                            preserved_tag = old_tag if tag.post_count <= old_tag.post_count else tag
+
+                            self.id_map.pop(self.get_unique_tag_id(removed_tag))
+
+                            for alias in [removed_tag.v1_name, removed_tag.v2_name, removed_tag.v2_short, removed_tag.origin_name]:
+                                if alias in self.alias_map and self.alias_map[alias].tag == removed_tag:
+                                    old_alias = self.alias_map[alias]
+
+                                    self.alias_map[alias] = TagAlias(
+                                        id=self.get_unique_tag_id(preserved_tag),
+                                        category=preserved_tag.category,
+                                        versions=old_alias.versions,
+                                        tag=preserved_tag,
+                                        count=preserved_tag.post_count
+                                    )
+
+                            if preserved_tag.post_count >= significant_tag_post_count_threshold or removed_tag.post_count >= significant_tag_post_count_threshold:
+                                print(f'Merged tags: "{preserved_tag.origin_name}" and "{removed_tag.origin_name}" have been merged together as "{preserved_tag.preferred_name}". Use rewrite or prefilter rules to resolve this conflict if necessary.')
 
                             continue
-                            # raise KeyError(old_v2_name_long)
+                        else:
+                            pass
+                    else:
+                        pass
 
-                        if self.alias_map[old_v2_name_long].tag is not old_tag:
+                    if self.alias_map[old_v2_name_long].tag is not old_tag:
+                        if old_tag.post_count >= significant_tag_post_count_threshold:
                             raise ValueError(v2_name_long)
 
-                        self.alias_map[v2_name_long] = TagAlias(
-                            id=self.get_unique_tag_id(tag),
-                            category=tag.category,
+                    self.alias_map[v2_name_long] = TagAlias(
+                        id=self.get_unique_tag_id(tag),
+                        category=tag.category,
+                        versions=[TagVersion.V2],
+                        tag=tag,
+                        count=tag.post_count
+                    )
+
+                    old_tag.preferred_name = old_v2_name_long
+
+                tag.preferred_name = v2_name_long
+
+        self.determine_short_names()
+
+        progress.succeed(f'{tag_count} tags normalized, {merge_count} merged')
+
+    def determine_short_names(self):
+        for tag in self.id_map.values():
+            v2_name_short = self.to_v2_tag(tag, short=True)
+
+            if v2_name_short not in self.alias_map:
+                self.alias_map[v2_name_short] = TagAlias(
+                    id=self.get_unique_tag_id(tag),
+                    category=tag.category,
+                    versions=[TagVersion.V2],
+                    tag=tag,
+                    count=tag.post_count
+                )
+
+                tag.preferred_name = v2_name_short
+                tag.v2_short = v2_name_short
+                print(f'Preferring "{tag.v2_short}" for "{tag.origin_name}" ({tag.category})')
+
+            elif self.alias_map[v2_name_short].tag is not tag:
+                old_tag = self.alias_map[v2_name_short].tag
+
+                if old_tag.v2_name == v2_name_short:
+                    continue
+
+                if category_naming_order[tag.category] < category_naming_order[old_tag.category]:
+                    if old_tag.v2_name not in self.alias_map or self.alias_map[old_tag.v2_name] is not old_tag:
+                        self.alias_map[old_tag.v2_name] = TagAlias(
+                            id=self.get_unique_tag_id(old_tag),
+                            category=old_tag.category,
                             versions=[TagVersion.V2],
-                            tag=tag,
-                            count=tag.post_count
+                            tag=old_tag,
+                            count=old_tag.post_count
                         )
+                        old_tag.preferred_name = old_tag.v2_name
+                        print(f'Switching "{old_tag.origin_name}" ({old_tag.category}) to "{old_tag.preferred_name}"')
 
-                        old_tag.preferred_name = old_v2_name_long
+                    self.alias_map[v2_name_short] = TagAlias(
+                        id=self.get_unique_tag_id(tag),
+                        category=tag.category,
+                        versions=[TagVersion.V2],
+                        tag=tag,
+                        count=tag.post_count
+                    )
 
-                    tag.preferred_name = v2_name_long
-
-        progress.succeed('Tags normalized')
+                    tag.preferred_name = v2_name_short
+                    tag.v2_short = v2_name_short
+                    print(f'Preferring "{tag.v2_short}" for "{tag.origin_name}" ({tag.category})')
+            elif self.alias_map[v2_name_short].tag is tag:
+                tag.preferred_name = v2_name_short
 
     def get_special_naming_convention(self, tag: Union[TagProtoEntity, TagEntity]) -> Optional[str]:
         if tag.category == Category.META and tag.origin_name in self.aspect_ratios:

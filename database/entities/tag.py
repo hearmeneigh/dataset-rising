@@ -17,6 +17,7 @@ class TagProtoEntity:
     reference_name: str  # unmodified original name, never used
     category: Category
     post_count: Optional[int]
+    renamed: bool = False
 
     def __init__(self, source: Source, source_id: str, origin_name: str, reference_name: str, category: Category, post_count: Optional[int]):
         self.source = source
@@ -61,15 +62,17 @@ class TagVersion(Enum):
 
 
 class TagAlias:
-    def __init__(self, id: str, category: Category, versions: List[TagVersion], tag: TagEntity, count: Optional[int]):
+    def __init__(self, id: str, category: Category, versions: List[TagVersion], tag: TagEntity, count: Optional[int], proto_tag: Optional[TagProtoEntity] = None):
         self.id = id
         self.category = category
         self.versions = versions
         self.tag = tag
         self.count = count
+        self.proto_tag = proto_tag
 
     id: str
     category: Category
     versions: List[TagVersion]
     tag: TagEntity
     count: Optional[int]
+    proto_tag: Optional[TagProtoEntity]

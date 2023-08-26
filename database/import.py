@@ -12,6 +12,8 @@ import argparse
 import json
 from typing import Optional, TextIO
 
+from pymongo.errors import DuplicateKeyError
+
 from entities.tag import TagEntity, TagProtoEntity
 from importer.importer import Importer
 from tag_normalizer.tag_normalizer import TagNormalizer
@@ -49,7 +51,7 @@ if args.remove_old:
 
     for collection in ['posts', 'tags', 'implications']:
         progress.update()
-        db[collection].delete_many()
+        db[collection].delete_many({})
 
     progress.succeed('Database cleaned')
 
@@ -79,7 +81,11 @@ tag_normalizer.normalize(args.tag_version)
 
 def save_tag(tag: TagEntity):
     save_tags_progress.update()
-    db['tags'].replace_one({'source': tag.source, 'source_id': tag.source_id}, vars(tag), upsert=True)
+
+    try:
+        db['tags'].replace_one({'source': tag.source, 'source_id': tag.source_id}, vars(tag), upsert=True)
+    except DuplicateKeyError as e:
+        print(f'Database level duplicate key error on tag "{tag.origin_name}" (#{tag.source_id}) -- tag not saved: {str(e)}')
 
 
 if not args.skip_save_tags:
