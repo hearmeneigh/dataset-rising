@@ -5,6 +5,8 @@
 #   --prefilter prefilter.yaml \
 #   --aspect-ratios aspect_ratios.yaml \
 #   --symbols symbols.yaml \
+#   --rewrites rewrites.yaml \
+#   --category-weights category_weights.yaml \
 #   --save-tags \
 #   --remove-old
 
@@ -22,7 +24,7 @@ from utils.db_utils import connect_to_db
 from utils.load_yaml import load_yaml
 from utils.progress import Progress
 
-parser = argparse.ArgumentParser(prog='Import', description='Import index and metadata from e621, gelbooru, and danbooru')
+parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, and danbooru')
 
 parser.add_argument('-p', '--posts', type=str, action='append', help='Post JSONL file(s) to import', required=True)
 parser.add_argument('-t', '--tags', type=str, help='Tag JSON file(s)', required=True, action='append')
@@ -31,6 +33,7 @@ parser.add_argument('--tag-version', type=str, help='Preferred tag format versio
 parser.add_argument('--prefilter', type=str, help='Prefilter YAML file', required=False, default='../examples/tag_normalizer/prefilter.yaml')
 parser.add_argument('--rewrites', type=str, help='Rewritten tags YAML file', required=False, default='../examples/tag_normalizer/rewrites.yaml')
 parser.add_argument('--aspect-ratios', type=str, help='Aspect ratios YAML file', required=False, default='../examples/tag_normalizer/aspect_ratios.yaml')
+parser.add_argument('--category-weights', type=str, help='Category weights YAML file', required=False, default='../examples/tag_normalizer/category_weights.yaml')
 parser.add_argument('--symbols', type=str, help='Symbols YAML file', required=False, default='../examples/tag_normalizer/symbols.yaml')
 parser.add_argument('--skip-save-tags', help='Do not save tags to the database', default=False, action='store_true')
 parser.add_argument('--remove-old', help='Remove all data from the database before importing', default=False, action='store_true')
@@ -38,10 +41,12 @@ parser.add_argument('--remove-old', help='Remove all data from the database befo
 args = parser.parse_args()
 
 # initialize
+# @todo: validate data structures
 aspect_ratios = load_yaml(args.aspect_ratios).get('tags', [])
 symbols = load_yaml(args.symbols).get('tags', [])
 prefilter = {key: True for key in load_yaml(args.prefilter).get('tags', [])}
 rewrites = {tag['from']: tag['to'] for tag in load_yaml(args.rewrites).get('tags', [])}
+category_weights = load_yaml(args.category_weights).get('categories', {})
 
 (db, client) = connect_to_db()
 
@@ -57,7 +62,7 @@ if args.remove_old:
 
 # process tags
 tag_translator = get_tag_translator(args.source)
-tag_normalizer = TagNormalizer(prefilter=prefilter, symbols=symbols, aspect_ratios=aspect_ratios, rewrites=rewrites)
+tag_normalizer = TagNormalizer(prefilter=prefilter, symbols=symbols, aspect_ratios=aspect_ratios, rewrites=rewrites, category_naming_order=category_weights)
 save_tag_count = 0
 
 
@@ -79,19 +84,20 @@ for tag_file in args.tags:
 tag_normalizer.normalize(args.tag_version)
 
 
-def save_tag(tag: TagEntity):
-    save_tags_progress.update()
-
-    try:
-        db['tags'].replace_one({'source': tag.source, 'source_id': tag.source_id}, vars(tag), upsert=True)
-    except DuplicateKeyError as e:
-        print(f'Database level duplicate key error on tag "{tag.origin_name}" (#{tag.source_id}) -- tag not saved: {str(e)}')
-
-
 if not args.skip_save_tags:
     save_tags_progress = Progress(title='Saving tags', units='tags')
-    tag_normalizer.save(lambda tag: save_tag(tag))
-    save_tags_progress.succeed('Tags saved')
+    save_tag_errors = 0
+
+    for tag in tag_normalizer.get_tags():
+        save_tags_progress.update()
+
+        try:
+            db['tags'].replace_one({'source': tag.source, 'source_id': tag.source_id}, vars(tag), upsert=True)
+        except DuplicateKeyError as e:
+            save_tag_errors += 1
+            print(f'Database level duplicate key error on tag "{tag.origin_name}" (#{tag.source_id}) -- tag not saved: {str(e)}')
+
+    save_tags_progress.succeed(f'{save_tags_progress.count} tags saved, {save_tag_errors} errors')
 
 
 # process posts

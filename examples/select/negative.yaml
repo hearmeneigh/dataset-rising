@@ -1,10 +1,11 @@
-# This selector produces a set of *negative samples*
+# This selector produces a set of *negative samples* of which
+# suitability we have moderate confidence.
 #
 # The final dataset will be a combination of:
 #   - X samples from 'curated' selector
 #   - Y samples from 'positive' selector
 #   - Z samples from 'negative' selector
-
+#   - N samples from 'uncurated' selector
 
 # Intentionally in the 'include' section
 include:
@@ -31,7 +32,6 @@ include:
   - meta:marker_artwork
 
 exclude:
-  - score_below_100
-  - favorites_below_250
+  - score_below_50
   - meta:comic
   - meta:animated

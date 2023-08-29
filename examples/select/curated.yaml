@@ -5,7 +5,9 @@
 #   - X samples from 'curated' selector
 #   - Y samples from 'positive' selector
 #   - Z samples from 'negative' selector
+#   - N samples from 'uncurated' selector
 
+# Intentionally in the 'include' section
 include:
   - !include positive/accessories.yaml
   - !include positive/act.yaml

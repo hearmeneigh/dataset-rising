@@ -5,7 +5,7 @@ from typing import List, Dict, Union, Optional, Callable
 from anyascii import anyascii
 
 from entities.post import PostEntity
-from utils.enums import Category, category_naming_order, Source, Rating
+from utils.enums import Category, Source, Rating
 from entities.tag import TagEntity, TagProtoEntity, TagAlias, TagVersion
 from utils.progress import Progress
 
@@ -33,9 +33,9 @@ class TagNormalizer:
     original_map: Dict[str, TagEntity] = {}
 
     # determines which tag gets the preferred no-prefix name
-    category_naming_order: Dict[Category, int] = category_naming_order
+    category_naming_order: Dict[Category, int] = {}
 
-    def __init__(self, prefilter: Dict[str, bool] = None, symbols: List[str] = None, aspect_ratios: List[str] = None, rewrites: Dict[str, dict] = None):
+    def __init__(self, prefilter: Dict[str, bool] = None, symbols: List[str] = None, aspect_ratios: List[str] = None, rewrites: Dict[str, dict] = None, category_naming_order: Dict[Category, int] = None):
         if prefilter is None:
             prefilter = {}
 
@@ -48,10 +48,14 @@ class TagNormalizer:
         if rewrites is None:
             rewrites = {}
 
+        if category_naming_order is None:
+            category_naming_order = {}
+
         self.prefilter = prefilter
         self.symbols = symbols
         self.aspect_ratios = aspect_ratios
         self.rewrites = rewrites
+        self.category_naming_order = category_naming_order
 
     def load(self, read_tag_cb: Callable[[], Optional[TagProtoEntity]]):
         progress = Progress(title='Loading tags', units='tags')
@@ -397,9 +401,8 @@ class TagNormalizer:
     def get_category_naming_order(self, category: Category) -> int:
         return category_naming_order[category.value]
 
-    def save(self, write_tag_cb: Callable[[TagEntity], None]):
-        for tag in self.id_map.values():
-            write_tag_cb(tag)
+    def get_tags(self) -> dict_values[str, TagEntity]:
+        self.id_map.values()
 
     def get_by_original_name(self, tag_name: str) -> Optional[TagEntity]:
         return self.original_map.get(tag_name, None)

@@ -18,10 +18,12 @@ parser = argparse.ArgumentParser(prog='Pick', description='Pick samples for a se
 parser.add_argument('-s', '--selector', type=str, help='Selector YAML file', required=True)
 parser.add_argument('-o', '--output', type=str, help='Output file (JSONL)', required=True)
 parser.add_argument('-l', '--limit', type=int, help='Number of samples to generate (default: max)', required=False, default=None)
-parser.add_argument('-i', '--image-format', type=str, help='Image formats to select from', required=False, action='append', default=['jpg', 'png'])
+parser.add_argument('-i', '--image-format', type=str, help='Image formats to select from', required=False, action='append', default=[])
 
 args = parser.parse_args()
 
+if len(args.image_format) == 0:
+    args.image_format = ['jpg', 'png']
 
 def get_file_parts(path: str, file_subtitle) -> (str, str, str):
     filename = os.path.basename(path)

@@ -38,6 +38,9 @@ class Importer:
                 record = self.translator.translate(data)
                 record.tags.extend(self.tag_normalizer.get_pseudo_tags(record))
 
+                # remove duplicates
+                record.tags = list(set(record.tags))
+
                 try:
                     collection.replace_one({
                         'source': record.source,
@@ -48,5 +51,6 @@ class Importer:
                     print(f'Could not import record on line #{cur_line} of {input_file}: {e}')
                     continue
 
-        self.progress.succeed('Posts imported')
+        total_errors = json_errors + mongo_errors
+        self.progress.succeed(f'{cur_line - total_errors} posts imported, {total_errors} errors')
         return cur_line, mongo_errors, json_errors

@@ -5,6 +5,7 @@
 #   - X samples from 'curated' selector
 #   - Y samples from 'positive' selector
 #   - Z samples from 'negative' selector
+#   - N samples from 'uncurated' selector
 
 include:
   - !include positive/artists.yaml

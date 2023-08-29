@@ -3,7 +3,7 @@
 import argparse
 from crawler.helpers import get_crawler
 
-parser = argparse.ArgumentParser(prog='Crawl', description='Download index and metadata from e621, gelbooru, and danbooru')
+parser = argparse.ArgumentParser(prog='Crawl', description='Download metadata from e621, gelbooru, and danbooru')
 
 parser.add_argument('-o', '--output', type=str, help='Output JSONL file', required=True)
 parser.add_argument('-t', '--type', type=str, help='Crawl type', required=True, choices=['search', 'index', 'tags', 'implications'])

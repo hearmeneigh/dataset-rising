@@ -1,26 +1,6 @@
 from enum import Enum
 
 
-category_naming_order = {
-    'general': 0,
-    'symbol': 1,
-    'species': 2,
-    'artist': 3,
-    'meta': 4,
-    'character': 5,
-    'copyright': 6,
-    'lore': 7,
-    'rating': 8,
-    'score': 9,
-    'comments': 10,
-    'aspect_ratio': 11,
-    'rising': 12,
-    'description': 13,
-    'views': 14,
-    'invalid': 100
-}
-
-
 class Format(str, Enum):
     JPG = 'jpg'
     PNG = 'png'

@@ -1,0 +1,20 @@
+# This selector produces a set of *negative samples* of which
+# suitability we have high confidence.
+#
+# The final dataset will be a combination of:
+#   - X samples from 'curated' selector
+#   - Y samples from 'positive' selector
+#   - Z samples from 'negative' selector
+#   - N samples from 'uncurated' selector
+
+# Intentionally in the 'include' section
+include:
+  - !include negative/artists.yaml
+  - score_below_0
+  - favorites_below_25
+  - meta:comic
+  - meta:animated
+
+exclude:
+  - score_above_250
+  - favorites_above_250
