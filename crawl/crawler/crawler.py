@@ -50,7 +50,7 @@ class Crawler:
         self.session.mount('http://', self.adapter)
         self.session.mount('https://', self.adapter)
 
-    def crawl(self, recover: bool = False):
+    def crawl(self, agent: str, recover: bool = False):
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
         self.fp = open(self.output_file, 'a')
@@ -61,7 +61,7 @@ class Crawler:
             self.recover_position()
 
         while result is not None:
-            result = self.fetch()
+            result = self.fetch(agent)
 
             if result is not None:
                 records = result.get(self.json_field, []) if self.json_field is not None else result
@@ -82,13 +82,13 @@ class Crawler:
 
     # max 3 requests/s
     @throttle(calls=9, period=timedelta(seconds=3))
-    def fetch(self):
+    def fetch(self, agent: str):
         url = self.get_url()
 
         print(f'[#{self.cur_index + 1}] Fetching {url}')
 
         r = requests.get(url, headers={
-            'user-agent': 'e621-crawler/1.0 (by @hearmeneigh)'
+            'user-agent': agent  ## 'e621-crawler/1.0 (by @hearmeneigh)'
         })
 
         if r.status_code != 200:

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Import" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="Build" type="PythonConfigurationType" factoryName="Python">
     <module name="e621-rising" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -13,8 +13,8 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database/import.py" />
-    <option name="PARAMETERS" value="--posts /tmp/e621.net-index.jsonl --tags /tmp/e621.net-tags.jsonl --source e621 --remove-old" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dataset/build.py" />
+    <option name="PARAMETERS" value="--source /tmp/e621-curated.yaml --source /tmp/e621-positive.yaml --source /tmp/e621-negative.yaml --source /tmp/e621-uncurated.yaml --agent &quot;helloworld&quot; --export-tags /tmp/e621-tag-counts.json --min-posts-per-tag 20 --min-tags-per-post 5 --limit 100" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

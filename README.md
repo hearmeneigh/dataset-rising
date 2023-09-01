@@ -1,7 +1,7 @@
 # E621 Rising
 
 > Toolchain for training Stable Diffusion 1.x, Stable Diffusion 2.x, and Stable Diffusion XL models
-> on custom image datasets.
+> with custom image datasets.
 
 * Crawl and download metadata from E621 and other image boards
 * Combine multiple sources of images, including your own custom ones
@@ -38,12 +38,6 @@ Warning: This step **removes** the MongoDB database container and all data store
 ```
 
 
-```mermaid
-
-
-```
-
-
 ## Full Example
 
 ### 0. Setup
@@ -57,16 +51,26 @@ cd <e621-rising>
 ### 1. Download Metadata
 E621 Rising has a crawler to download metadata (=posts and tags) from E621 and other booru-style image boards.
 
-To skip this step, you can download these metadata snapshots from Huggingface: [tags]() [posts]() 
+To skip this step, you can download these metadata snapshots from Huggingface:
+
+> [Tags]() | [Posts]() 
+
+You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will be passed to the image board with every
+HTTP request. If you don't pick a user agent that uniquely identifies you,
+the image boards will likely block your requests. For example:
+
+> `--agent 'my-imageboard-crawler/1.0 (user @my-username-on-the-imageboard)'`
+
+The crawler will automatically manage rate limits and retries. If you want to resume a previous (failed) crawl, use `--recover`.
 
 ```bash
 cd <e621-rising>/crawl
 
 ## download tag metadata to /tmp/e621.net-tags.jsonl
-python3 crawl.py --output /tmp/e621.net-tags.jsonl --type tags --source e621 --recover
+python3 crawl.py --output /tmp/e621.net-tags.jsonl --type tags --source e621 --recover --agent '<AGENT_STRING>'
 
 ## download posts metadata to /tmp/e621.net-posts.jsonl
-python3 crawl.py --output /tmp/e621.net-posts.jsonl --type index --source e621 --recover
+python3 crawl.py --output /tmp/e621.net-posts.jsonl --type index --source e621 --recover --agent '<AGENT_STRING>'
 ```
 
 ### 2. Import Metadata
@@ -143,14 +147,22 @@ python3 build.py \
 ```
 
 ### 6. Train a Model
+`--base-model` can be any Diffusers compatible model, such as 
+
+* `hearmeneigh/e621-rising-v3`
+* `stabilityai/stable-diffusion-xl-base-1.0`
+* `stabilityai/stable-diffusion-2.0`
+* `stabilityai/stable-diffusion-1.5`
 
 ```bash
 cd <e621-rising>/train
 
 python3 train.py \
-  --dataset username/dataset-name \
+  --dataset username/dataset-name \  # Huggingface dataset or file path to Parquet directory 
   --base-model stabilityai/stable-diffusion-xl-base-1.0 \
   --output /tmp/e621-rising-v3-model \
+  --image_width 1024 \  # use 512 for SD1.5 and SD2.0, unless you are using a 768x768 base model
+  --image_height 1024 \
   --batch-size 1 \  # increase if you have a lot of GPU memory  
   --upload-to-hf username/model-name \  # optional
   --snapshot-to-s3 s3://some-bucket/some/path # optional

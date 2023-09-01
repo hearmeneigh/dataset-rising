@@ -15,10 +15,10 @@ from utils.progress import Progress
 
 parser = argparse.ArgumentParser(prog='Pick', description='Pick samples for a selector')
 
-parser.add_argument('-s', '--selector', type=str, help='Selector YAML file', required=True)
-parser.add_argument('-o', '--output', type=str, help='Output file (JSONL)', required=True)
-parser.add_argument('-l', '--limit', type=int, help='Number of samples to generate (default: max)', required=False, default=None)
-parser.add_argument('-i', '--image-format', type=str, help='Image formats to select from', required=False, action='append', default=[])
+parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file', required=True)
+parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file (JSONL)', required=True)
+parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate (default: max)', required=False, default=None)
+parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from', required=False, action='append', default=[])
 
 args = parser.parse_args()
 

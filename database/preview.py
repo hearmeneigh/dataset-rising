@@ -17,13 +17,13 @@ from utils.progress import Progress
 
 parser = argparse.ArgumentParser(prog='Preview', description='Generate preview for a selector')
 
-parser.add_argument('-s', '--selector', type=str, help='Selector YAML file', required=True)
-parser.add_argument('-o', '--output', type=str, help='Output file or path', required=True)
-parser.add_argument('-l', '--limit', type=int, help='Number of samples to generate per aggregate', required=False, default=10)
-parser.add_argument('-i', '--image-format', type=str, help='Image formats to select from', required=False, action='append', default=[])
-parser.add_argument('-f', '--output-format', type=str, help='Output format', required=False, choices=['html', 'jsonl'], default='html')
+parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file', required=True)
+parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file or path', required=True)
+parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate per aggregate', required=False, default=10)
+parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from', required=False, action='append', default=[])
+parser.add_argument('-f', '--output-format', metavar='FORMAT', type=str, help='Output format', required=False, choices=['html', 'jsonl'], default='html')
 parser.add_argument('-a', '--aggregate', help='Aggregate categories (=preview how the whole selector will perform, not the categories)', default=False, action='store_true')
-parser.add_argument('-t', '--template', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
+parser.add_argument('-t', '--template', metavar='FILE', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
 
 args = parser.parse_args()
 
