@@ -41,7 +41,7 @@ Warning: This step **removes** the MongoDB database container and all data store
 
 ## Full Example
 
-### 0.0 Setup
+### 0A. Setup
 Make sure you install Docker and Python 3 before continuing.
 
 ```bash
@@ -49,7 +49,7 @@ cd <dataset-rising>
 ./up.sh
 ```
 
-### 0.1 Activate VENV
+### 0B. Activate VENV
 Before running any of the scripts described below, you must activate the Python virtual environment.
 
 ```bash
