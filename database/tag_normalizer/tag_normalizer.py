@@ -348,7 +348,7 @@ class TagNormalizer:
                 if old_tag.v2_name == v2_name_short:
                     continue
 
-                if category_naming_order[tag.category] < category_naming_order[old_tag.category]:
+                if self.category_naming_order[tag.category] < self.category_naming_order[old_tag.category]:
                     if old_tag.v2_name not in self.alias_map or self.alias_map[old_tag.v2_name] is not old_tag:
                         self.alias_map[old_tag.v2_name] = TagAlias(
                             id=self.get_unique_tag_id(old_tag),
@@ -399,10 +399,10 @@ class TagNormalizer:
         return f'{tag.source.value}___{tag.source_id}'
 
     def get_category_naming_order(self, category: Category) -> int:
-        return category_naming_order[category.value]
+        return self.category_naming_order[category.value]
 
-    def get_tags(self) -> dict_values[str, TagEntity]:
-        self.id_map.values()
+    def get_tags(self):
+        return self.id_map.values()
 
     def get_by_original_name(self, tag_name: str) -> Optional[TagEntity]:
         return self.original_map.get(tag_name, None)
