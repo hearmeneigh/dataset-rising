@@ -13,7 +13,7 @@ With this toolchain, you can:
 
 ## Requirements
 * Python `>= 3.9.6`
-* Docker '>= 24.0.0`
+* Docker `>= 24.0.0`
 
 
 ## Setting Up
