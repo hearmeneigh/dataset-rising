@@ -60,11 +60,6 @@ source ./venv/bin/activate
 ### 1. Download Metadata
 Dataset Rising has a crawler to download metadata (=posts and tags) from booru-style image boards.
 
-To skip this step, you can download these metadata snapshots from Huggingface:
-
-> * [Tags]()
-> * [Posts]() 
-
 You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will be passed to the image board with every
 HTTP request. If you don't pick a user agent that uniquely identifies you,
 the image boards will likely block your requests. For example:
