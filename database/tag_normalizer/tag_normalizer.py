@@ -126,6 +126,19 @@ class TagNormalizer:
         self.register_pseudo_tags()
         progress.succeed(f'{tag_count} tags loaded; {prefilter_count} filtered, {rewrite_count} rewritten, and {recategorize_count} recategorized; {symbol_count} symbols and {aspect_ratio_count} aspect ratios')
 
+    # only use when reconstructing tag normalizer from the database
+    def add_database_tag(self, tag: TagEntity, version: TagVersion):
+        self.id_map[self.get_unique_tag_id(tag)] = tag
+        self.original_map[tag.reference_name] = tag
+
+        self.alias_map[tag.preferred_name] = TagAlias(
+            id=self.get_unique_tag_id(tag),
+            category=tag.category,
+            versions=[version],
+            tag=tag,
+            count=tag.post_count
+        )
+
     def add_tag(self, tag_alias: str, proto_tag: TagProtoEntity, version: TagVersion):
         try:
             tag_alias = self.clean(tag_alias)

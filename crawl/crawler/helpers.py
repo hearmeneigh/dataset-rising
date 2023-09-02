@@ -3,6 +3,46 @@ from typing import Optional
 from .crawler import Crawler
 import urllib.parse
 
+def get_e926_index_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e926.net/posts.json?limit=320',
+        page_type='by_id',
+        page_field='page',
+        page_field_prefix='b'
+    )
+
+
+def get_e926_search_crawler(output_file: str, search_query: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e926.net/posts.json?limit=320&tags=' + urllib.parse.quote(search_query, ''),
+        page_type='index',
+        page_field='page'
+    )
+
+
+def get_e926_tag_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e926.net/tags.json?limit=320&search[order]=date',
+        page_type='by_id',
+        page_field='page',
+        page_field_prefix='b',
+        json_field=None
+    )
+
+
+def get_e926_implications_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e926.net/tag_implications.json?limit=320',
+        page_type='index',
+        page_field='page',
+        json_field=None
+    )
+
+
 def get_e621_index_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
@@ -105,7 +145,16 @@ def get_danbooru_tag_crawler(output_file: str):
 
 
 def get_crawler(source: str, type: str, output_file: str, search_query: Optional[str]) -> Crawler:
-    if source == 'e621':
+    if source == 'e926':
+        if type == 'index':
+            return get_e926_index_crawler(output_file)
+        elif type == 'search':
+            return get_e926_search_crawler(output_file, search_query)
+        elif type == 'tags':
+            return get_e926_tag_crawler(output_file)
+        elif type == 'implications':
+            return get_e926_implications_crawler(output_file)
+    elif source == 'e621':
         if type == 'index':
             return get_e621_index_crawler(output_file)
         elif type == 'search':

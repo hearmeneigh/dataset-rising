@@ -1,18 +1,19 @@
-# E621 Rising
+# Dataset Rising
 
 > Toolchain for training Stable Diffusion 1.x, Stable Diffusion 2.x, and Stable Diffusion XL models
 > with custom image datasets.
 
-* Crawl and download metadata from E621 and other image boards
-* Combine multiple sources of images, including your own custom ones
+With this toolchain, you can:
+* Crawl and download metadata from 'booru' style image boards
+* Combine multiple sources of images, (including your own custom sources)
 * Build datasets based on your personal preferences
 * Train Stable Diffusion models on your datasets
-* Modular design and JSONL data exchange formats – use only the parts you need
-* Known to work with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
+* Use only the parts you need – the toolchain has modular design and JSONL data exchange formats
+* Work with confidence that the tooling works with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
 
 ## Requirements
-* Python 3
-* Docker
+* Python `>= 3.9.6`
+* Docker '>= 24.0.0`
 
 
 ## Setting Up
@@ -40,20 +41,29 @@ Warning: This step **removes** the MongoDB database container and all data store
 
 ## Full Example
 
-### 0. Setup
-Make sure you install Docker and Python3 before continuing.
+### 0.0 Setup
+Make sure you install Docker and Python 3 before continuing.
 
 ```bash
-cd <e621-rising>
+cd <dataset-rising>
 ./up.sh
 ```
 
+### 0.1 Activate VENV
+Before running any of the scripts described below, you must activate the Python virtual environment.
+
+```bash
+cd <dataset-rising>
+source ./venv/bin/activate
+```
+
 ### 1. Download Metadata
-E621 Rising has a crawler to download metadata (=posts and tags) from E621 and other booru-style image boards.
+Dataset Rising has a crawler to download metadata (=posts and tags) from booru-style image boards.
 
 To skip this step, you can download these metadata snapshots from Huggingface:
 
-> [Tags]() | [Posts]() 
+> * [Tags]()
+> * [Posts]() 
 
 You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will be passed to the image board with every
 HTTP request. If you don't pick a user agent that uniquely identifies you,
@@ -64,30 +74,30 @@ the image boards will likely block your requests. For example:
 The crawler will automatically manage rate limits and retries. If you want to resume a previous (failed) crawl, use `--recover`.
 
 ```bash
-cd <e621-rising>/crawl
+cd <dataset-rising>/crawl
 
-## download tag metadata to /tmp/e621.net-tags.jsonl
-python3 crawl.py --output /tmp/e621.net-tags.jsonl --type tags --source e621 --recover --agent '<AGENT_STRING>'
+## download tag metadata to /tmp/tags.jsonl
+python3 crawl.py --output /tmp/e962-tags.jsonl --type tags --source e926 --recover --agent '<AGENT_STRING>'
 
-## download posts metadata to /tmp/e621.net-posts.jsonl
-python3 crawl.py --output /tmp/e621.net-posts.jsonl --type index --source e621 --recover --agent '<AGENT_STRING>'
+## download posts metadata to /tmp/e926.net-posts.jsonl
+python3 crawl.py --output /tmp/e926.net-posts.jsonl --type index --source e926 --recover --agent '<AGENT_STRING>'
 ```
 
 ### 2. Import Metadata
 Once you have enough post and tag metadata, it's time to import the data into a database.
 
-E621 Rising uses MongoDB as a store for the post and tag metadata. Use `import` to
+Dataset Rising uses MongoDB as a store for the post and tag metadata. Use `import` to
 import the metadata downloaded in the previous step into MongoDB.
 
 If you want to adjust how the tag metadata is treated during the import,
-review files in `<e621-rising>/examples/tag_normalizer` and set the optional
+review files in `<dataset-rising>/examples/tag_normalizer` and set the optional
 tags `--prefilter FILE`, `--rewrites FILE`, `--aspect-ratios FILE`, `--category-weights FILE`, and
 `--symbols FILE` accordingly.
 
 ```bash
-cd <e621-rising>/database
+cd <dataset-rising>/database
 
-python3 import.py --tags /tmp/e621.net-tags.jsonl --input /tmp/e621.net-posts.jsonl --source e621
+python3 import.py --tags /tmp/e926.net-tags.jsonl --input /tmp/e926.net-posts.jsonl --source e926
 ```
 
 ### 3. Preview Selectors
@@ -101,14 +111,13 @@ Note that a great dataset will contain positive **and** negative examples. If yo
 train your dataset with positive samples, your model will not be able to use negative
 prompts well.
 
-E621 Rising has example selectors available in `<e621-rising>/examples/select`. These
-are the selectors used for building [E621 Rising V3](https://huggingface.co/hearmeneigh/e621-rising-v3) SDXL model.
+Dataset Rising has example selectors available in `<dataset-rising>/examples/select`.
 
 To make sure your selectors are producing the kind of samples you want, use the `preview`
 script:
 
 ```bash
-cd <e621-rising>/database
+cd <dataset-rising>/database
 
 # generate a HTML preview of how the selector will perform (note: --aggregate is required):
 python3 preview.py --selector ./examples/select/curated.yaml --output /tmp/curated-previews --limit 1000 --output --aggregate
@@ -121,7 +130,7 @@ python3 preview.py --selector ./examples/select/positive/artists.yaml --output /
 When you're ready to build a dataset, use `pick` to select posts from the database and store them in a JSONL file. 
 
 ```bash
-cd <e621-rising>/database
+cd <dataset-rising>/database
 
 python3 pick.py --selector ./examples/select/curated.yaml --output /tmp/curated.jsonl
 python3 pick.py --selector ./examples/select/negative.yaml --output /tmp/negative.jsonl
@@ -135,37 +144,41 @@ After selecting the posts for the dataset, use `build` to download the images an
 By default, the build script prunes all tags that have fewer than 150 samples. To adjust this limit, use `--prune LIMIT`.
 
 ```bash
-cd <e621-rising>/dataset
+cd <dataset-rising>/dataset
 
 python3 build.py \
-  --source /tmp/curated.jsonl:30% \       # 30% of the dataset will be curated samples
-  --source /tmp/positive.jsonl:40% \      # 40% of the dataset will be positive samples
-  --source /tmp/negative.jsonl:20% \      # etc.
-  --source /tmp/uncurated.jsonl:10% \
-  --output /tmp/e621-rising-v3-dataset \
-  --upload-to-hf username/dataset-name    # optional
+  --source '/tmp/curated.jsonl:30%' \        # 30% of the dataset will be curated samples
+  --source '/tmp/positive.jsonl:40%' \       # 40% of the dataset will be positive samples
+  --source '/tmp/negative.jsonl:20%' \       # etc.
+  --source '/tmp/uncurated.jsonl:10%' \
+  --output /tmp/my-dataset \
+  --upload-to-hf username/dataset-name       # optional
 ```
 
 ### 6. Train a Model
-`--base-model` can be any Diffusers compatible model, such as 
+To train a model, you will need to pick the base model to start from. The `--base-model` can be any
+[Diffusers](https://huggingface.co/docs/diffusers/index) compatible model, such as:
 
-* `hearmeneigh/e621-rising-v3`
-* `stabilityai/stable-diffusion-xl-base-1.0`
-* `stabilityai/stable-diffusion-2.0`
-* `stabilityai/stable-diffusion-1.5`
+* [hearmeneigh/e621-rising-v3](https://huggingface.co/hearmeneigh/e621-rising-v3)
+* [stabilityai/stabilityai/stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)
+* [stabilityai/stable-diffusion-2-1-base](https://huggingface.co/stabilityai/stable-diffusion-2-1-base)
+* [runwayml/stable-diffusion-v1-5](https://huggingface.co/runwayml/stable-diffusion-v1-5)
+
+Note that your training results will be improved if you set `--image_width` and `--image_height` to match the
+resolution the base model was trained with.
 
 ```bash
-cd <e621-rising>/train
+cd <dataset-rising>/train
 
 python3 train.py \
   --dataset username/dataset-name \  # Huggingface dataset or file path to Parquet directory 
   --base-model stabilityai/stable-diffusion-xl-base-1.0 \
-  --output /tmp/e621-rising-v3-model \
+  --output /tmp/dataset-rising-v3-model \
   --image_width 1024 \  # use 512 for SD1.5 and SD2.0, unless you are using a 768x768 base model
   --image_height 1024 \
   --batch-size 1 \  # increase if you have a lot of GPU memory  
   --upload-to-hf username/model-name \  # optional
-  --snapshot-to-s3 s3://some-bucket/some/path # optional
+  --upload-to-s3 s3://some-bucket/some/path # optional
 ```
 
 ## Advanced Topics
@@ -176,13 +189,12 @@ The `append` script allows you to import posts from additional sources.
 Use `import` to import the first source and define the tag namespace, then use `append` to import additional sources.
 
 ```bash
-cd <e6261-rising>/database
+cd <dataset-rising>/database
 
-python3 import.py ...  #  E621 sources
+python3 import.py ...  #  main sources and tags
 
 python3 append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
 ```
-
 
 ### Architecture
 

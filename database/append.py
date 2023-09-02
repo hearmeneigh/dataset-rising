@@ -1,11 +1,9 @@
 import argparse
 
-from entities.tag import TagProtoEntity, TagVersion
 from importer.importer import Importer
-from tag_normalizer.tag_normalizer import TagNormalizer
+from tag_normalizer.util import load_normalizer_from_database
 from translator.helpers import get_post_translator, get_tag_translator
 from utils.db_utils import connect_to_db
-from utils.progress import Progress
 
 
 parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, and danbooru')
@@ -18,15 +16,8 @@ args = parser.parse_args()
 (db, client) = connect_to_db()
 
 # process tags
-tag_progress = Progress('Importing tags', 'tags')
+tag_normalizer = load_normalizer_from_database(db)
 tag_translator = get_tag_translator(args.source)
-tag_normalizer = TagNormalizer()
-
-for tag in db['tags'].find({}):
-    tag_progress.update()
-    tag_normalizer.add_tag(tag['preferred_name'], tag, TagVersion.V2)
-
-tag_progress.succeed(f'{tag_progress.count} tags imported')
 
 # process posts
 post_translator = get_post_translator(args.source, tag_normalizer)

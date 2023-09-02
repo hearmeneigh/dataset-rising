@@ -20,7 +20,7 @@ from utils.load_yaml import load_yaml
 
 parser = argparse.ArgumentParser(prog='Build', description='Build an image dataset from JSONL file(s)')
 parser.add_argument('-s', '--source', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
-parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string', required=True)
+parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
 parser.add_argument('-e', '--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
 parser.add_argument('--min-posts-per-tag', metavar='COUNT', type=int, help='Minimum number of posts a tag must appear in to be included', required=False, default=150)
 parser.add_argument('--min-tags-per-post', metavar='COUNT', type=int, help='Minimum number of tags in a post for the post to be included (counted after min-posts-per-tag limit has been applied)', required=False, default=10)
@@ -35,6 +35,10 @@ parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload d
 parser.add_argument('--limit', metavar='COUNT', type=int, help='Limit samples in dataset', required=False, default=None)
 
 args = parser.parse_args()
+
+if re.match(r'(rising|hearmeneigh|mrstallion)', args.agent, flags=re.IGNORECASE):
+    print('The user agent string must not contain words "rising", "hearmeneigh", or "mrstallion"')
+    exit(1)
 
 prefilters = {key: True for key in load_yaml(args.prefilter).get('tags', [])}
 
