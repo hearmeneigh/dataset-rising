@@ -40,6 +40,7 @@ Warning: This step **removes** the MongoDB database container and all data store
 
 
 ## Full Example
+Below is a summary of each step in dataset generation process. For a full production-quality example, see [https://github.com/hearmeneigh/e621-rising-configs](e621-rising-configs) (NSFW).
 
 ### 0A. Setup
 Make sure you install Docker and Python 3 before continuing.

@@ -1,7 +1,7 @@
 import os
 from functools import reduce
 from operator import add
-from typing import Dict, List, Union, Generator
+from typing import Dict, List, Union, Generator, Optional
 from pymongo.database import Database
 import yaml
 from yamlinclude import YamlIncludeConstructor
@@ -189,3 +189,12 @@ class Selector:
             'includes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats) for tag_name in self.includes},
             'excludes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats) for tag_name in self.excludes}
         }
+
+    def test(self, tag_name: str) -> Optional[bool]:
+        if tag_name in self.excludes:
+            return False
+
+        if tag_name in self.includes:
+            return True
+
+        return None

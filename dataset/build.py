@@ -1,5 +1,4 @@
 import argparse
-import io
 import math
 
 import boto3
@@ -11,10 +10,10 @@ import re
 import random
 import json
 
-from dataset.tasks.download import download_image
-from dataset.tasks.load import load_image
-from dataset.tasks.resize import resize_image
-from entities.post import PostEntity
+from database.entities.post import PostEntity
+
+from utils.format import format_posts_for_dataset
+from utils.prune import prune_and_filter_tags
 from utils.progress import Progress
 from utils.load_yaml import load_yaml
 
@@ -27,12 +26,13 @@ parser.add_argument('--min-tags-per-post', metavar='COUNT', type=int, help='Mini
 parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/dataset/prefilter.yaml')
 parser.add_argument('--image-width', metavar='PIXELS', type=int, help='Maximum width for stored images', required=False, default=4096)
 parser.add_argument('--image-height', metavar='PIXELS', type=int, help='Maximum height for stored images', required=False, default=4096)
-parser.add_argument('--image_format', metavar='FORMAT', type=str, help='Store image format', choices=['JPEG', 'PNG'], required=False, default='JPEG')
-parser.add_argument('--image_quality', metavar='PERCENTAGE', type=str, help='Store image quality', required=False, default=85)
+parser.add_argument('--image_format', metavar='FORMAT', type=str, help='Storage image format', choices=['JPEG', 'PNG'], required=False, default='JPEG')
+parser.add_argument('--image_quality', metavar='PERCENTAGE', type=str, help='Storage image quality', required=False, default=85)
 parser.add_argument('--num-proc', metavar='COUNT', type=int, help='Maximum number of parallel processes', required=False, default=1)
 parser.add_argument('--upload-to-huggingface', metavar='USER_NAME/DATASET_NAME', type=int, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
 parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)
 parser.add_argument('--limit', metavar='COUNT', type=int, help='Limit samples in dataset', required=False, default=None)
+parser.add_argument('--separator', metavar='STRING', type=str, help='Separator string for tag lists', required=False, default=' ')
 
 args = parser.parse_args()
 
@@ -85,41 +85,26 @@ for selection in selections:
     intended_size = round(selection.ratio / total_ratio * total_posts)
 
     if intended_size > len(selection.posts):
-        print(f'WARNING: Selection {selection.filename} has {len(selection.posts)} posts, but should have {intended_size} to match ratio. Using all posts.')
+        print(f'WARNING: Selection {selection.filename} has {len(selection.posts)} posts, but should have > {intended_size} posts to achieve the intended ratio. Using all {len(selection.posts)} posts.')
     else:
         selection.posts = selection.posts[0:intended_size]
 
-1# combine selections
+# combine selections
 posts = [post for sel in selections for post in sel.posts]
 
 for selection in selections:
     print(f'Using {len(selection.posts)} ({round(len(selection.posts)/len(posts)*100, 1)}%) from {selection.filename}')
 
-# prune tags
-tag_counts = {}
+# prune and filter tags
+tag_counts = prune_and_filter_tags(posts, prefilters, args.min_posts_per_tag)
 
-for post in posts:
-    for tag in post.tags:
-        tag_counts[tag] = tag_counts.get(tag, 0) + 1
+print(f'Using {len(tag_counts)} tags')
 
-# filter tags
-for prefilter in prefilters:
-    tag_counts.pop(prefilter)
-
-# count tags
-total_tags = 0
-
-for tag_count in tag_counts:
-    if tag_count >= args.min_posts_per_tag:
-        total_tags += 1
-
-print(f'Using {total_tags} tags')
-
+# remove excess tags from posts
 for post in posts:
     posts.tags = [tag for tag in post.tags if tag_counts.get(tag, 0) >= args.min_posts_per_tag]
 
-
-# filter posts
+# remove posts that have too few tags
 posts = [post for post in posts if len(post.tags) >= args.min_tags_per_post]
 
 
@@ -133,50 +118,7 @@ if args.export_tags is not None:
 # shuffle posts
 random.shuffle(posts)
 
-
-def format_posts_for_dataset(posts: List[PostEntity]):
-    progress = Progress('Downloading and importing images', 'images')
-
-    for post in posts:
-        progress.update()
-        download = download_image(post, args.agent)
-
-        if download is None:
-            continue
-
-        im = load_image(download, post)
-
-        if im is None:
-            continue
-
-        resized_image = resize_image(im=im, post=post, max_width=args.image_width, max_height=args.image_height)
-
-        if resized_image is None:
-            continue
-
-        # shuffle tags
-        shuffled_tags = post.tags.copy()
-        random.shuffle(shuffled_tags)
-
-        # compress image
-        compressed_image = io.BytesIO()
-        resized_image.save(compressed_image, format=args.image_format, quality=args.image_quality, optimize=True)
-
-        record = {
-            'source_id': post.source_id,
-            'source': post.source,
-            'image': compressed_image.getvalue(),
-            'tags': shuffled_tags,
-            'url': post.image_url,
-            'text': args.separator.join(shuffled_tags),
-            'desc': post.description
-        }
-
-        yield record
-
-    progress.succeed(f'{progress.count} images imported')
-
-
+# generate dataset
 ds = Dataset.from_generator(
   format_posts_for_dataset,
   features=datasets.Features(
@@ -191,15 +133,23 @@ ds = Dataset.from_generator(
     }
   ),
   num_proc=args.num_proc,
-  gen_kwargs={'posts': posts if args.limit is None else posts[0:args.limit]}
+  gen_kwargs={
+        'posts': posts if args.limit is None else posts[0:args.limit],
+        'agent': args.agent,
+        'image_width': args.image_width,
+        'image_height': args.image_height,
+        'image_format': args.image_format,
+        'image_quality': args.image_quality,
+        'separator': args.separator
+  }
 )
 
-
+# cast images
 p = Progress('Casting image column', 'images')
 ds.cast_column('image', datasets.Image())
 p.succeed('Image column cast complete')
 
-
+# embed bytes
 p = Progress('Embedding bytes for accurate shard sizing', 'bytes')
 initial_format = ds.format
 ds = ds.with_format("arrow")
@@ -207,13 +157,14 @@ ds = ds.map(embed_table_storage, batched=True, num_proc=args.num_proc)
 ds = ds.with_format(**initial_format)
 p.succeed('Shard sizing complete')
 
-
+# upload to huggingface
 if args.upload_to_huggingface is not None:
     p = Progress(f'Uploading to Huggingface {args.upload_to_huggingface}', 'bytes')
     # max_shard_size must be < 2GB, or you will run into problems
     ds.push_to_hub(args.upload_to_huggingface, private=True, max_shard_size='1GB')
     p.succeed('Dataset uploaded to Huggingface')
 
+# upload to S3
 if args.upload_to_s3 is not None:
     p = Progress(f'Uploading to S3 {args.upload_to_s3}', 'bytes')
     s3_client = boto3.client('s3')

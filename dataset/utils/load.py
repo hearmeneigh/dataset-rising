@@ -2,12 +2,13 @@ from typing import Optional
 
 from PIL import Image
 
-from entities.post import PostEntity
+from database.entities.post import PostEntity
 
 
 def load_image(file: bytes, post: PostEntity) -> Optional[Image.Image]:
     try:
         im = Image.open(file)
+
         return im.convert('RGB')
 
     except Exception as e:

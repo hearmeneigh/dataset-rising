@@ -32,7 +32,7 @@
 <h1>{{ title }}</h1>
 
 {% for tag in tags %}
-<h3>{{ tag.title }}</h3>
+    <h3>{{ tag.title }} {% if tag.total_count %}<small>({{ tag.total_count }} total)</small>{% endif %}</h3>
 
 {% if tag.images %}
   <ul>
