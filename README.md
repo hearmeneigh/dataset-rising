@@ -1,19 +1,24 @@
 # Dataset Rising
 
-> Toolchain for training Stable Diffusion 1.x, Stable Diffusion 2.x, and Stable Diffusion XL models
-> with custom image datasets.
+> A toolchain for creating and training Stable Diffusion 1.x, Stable Diffusion 2.x, and Stable Diffusion XL models
+> with custom datasets.
 
 With this toolchain, you can:
 * Crawl and download metadata and images from 'booru' style image boards
 * Combine multiple sources of images (including your own custom sources)
-* Build datasets based on your personal preferences
-* Train Stable Diffusion models on your datasets
+* Build datasets based on your personal preferences and filters
+* Train Stable Diffusion models with your datasets
+* Convert models into [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master) compatible models
 * Use only the parts you need – the toolchain uses modular design, YAML configuration files, and JSONL data exchange formats
-* Work with confidence that the tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
+* Work with confidence that the end-to-end tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
 
 ## Requirements
 * Python `>= 3.9.6`
 * Docker `>= 24.0.0`
+
+## Tested With
+* MacOS 13 (M1)
+* Ubuntu 22 (x86_64)
 
 
 ## Setting Up
@@ -137,7 +142,9 @@ python3 pick.py --selector ./examples/select/uncurated.yaml --output /tmp/uncura
 ### 5. Build a Dataset
 After selecting the posts for the dataset, use `build` to download the images and build the dataset
 
-By default, the build script prunes all tags that have fewer than 150 samples. To adjust this limit, use `--prune LIMIT`.
+By default, the build script prunes all tags that have fewer than 100 samples. To adjust this limit, use `--min-posts-per-tag LIMIT`.
+
+The build script will also prune all images that have fewer than 10 tags. To adjust this limit, use `--min-tags-per-post LIMIT`.
 
 ```bash
 cd <dataset-rising>/dataset
@@ -153,6 +160,8 @@ python3 build.py \
 ```
 
 ### 6. Train a Model
+Dataset Rising uses [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
+
 To train a model, you will need to pick the base model to start from. The `--base-model` can be any
 [Diffusers](https://huggingface.co/docs/diffusers/index) compatible model, such as:
 
@@ -163,6 +172,8 @@ To train a model, you will need to pick the base model to start from. The `--bas
 
 Note that your training results will be improved if you set `--image_width` and `--image_height` to match the
 resolution the base model was trained with.
+
+> This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
 ```bash
 cd <dataset-rising>/train
@@ -231,6 +242,37 @@ cd <dataset-rising>/database
 python3 import.py ...  #  main sources and tags
 
 python3 append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
+```
+
+### Multi-GPU Training
+Multi-GPU training can be carried out with [Huggingface Accelerate](https://huggingface.co/docs/accelerate/package_reference/cli) library.
+
+Before training, run `accelerate config` to set up your Multi-GPU environment.
+
+```bash
+cd <dataset-rising>/train
+
+# set up environment
+accelerate config
+
+# run training
+accelerate launch \
+  --multi_gpu \
+  train.py \
+    --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
+    --dataset-name 'username/dataset-name' \
+    --resolution 1024 \
+    --maintain-aspect-ratio \
+    --reshuffle-tags \
+    --tag-separator ' ' \
+    --random-flip \
+    --train-batch-size 32 \
+    --learning-rate 4e-6 \
+    --use-ema \
+    --max-grad-norm 1 \
+    --checkpointing-steps 1000 \
+    --lr-scheduler constant \
+    --lr-warmup-steps 0
 ```
 
 ### Architecture

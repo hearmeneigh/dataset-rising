@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(prog='Build', description='Build an image datas
 parser.add_argument('-s', '--source', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
 parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
 parser.add_argument('-e', '--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
-parser.add_argument('--min-posts-per-tag', metavar='COUNT', type=int, help='Minimum number of posts a tag must appear in to be included', required=False, default=150)
+parser.add_argument('--min-posts-per-tag', metavar='COUNT', type=int, help='Minimum number of posts a tag must appear in to be included', required=False, default=100)
 parser.add_argument('--min-tags-per-post', metavar='COUNT', type=int, help='Minimum number of tags in a post for the post to be included (counted after min-posts-per-tag limit has been applied)', required=False, default=10)
 parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/dataset/prefilter.yaml')
 parser.add_argument('--image-width', metavar='PIXELS', type=int, help='Maximum width for stored images', required=False, default=4096)
