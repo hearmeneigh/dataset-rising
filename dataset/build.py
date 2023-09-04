@@ -1,21 +1,20 @@
 import argparse
-import math
 
 import boto3
 import datasets
 from datasets import Dataset
 from datasets.table import embed_table_storage
-from typing import List
 import re
 import random
 import json
 
-from database.entities.post import PostEntity
+from utils.balance import balance_selections
 
 from utils.format import format_posts_for_dataset
 from utils.prune import prune_and_filter_tags
 from utils.progress import Progress
 from utils.load_yaml import load_yaml
+from utils.selection_source import SelectionSource
 
 parser = argparse.ArgumentParser(prog='Build', description='Build an image dataset from JSONL file(s)')
 parser.add_argument('-s', '--source', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
@@ -41,33 +40,6 @@ if re.match(r'(rising|hearmeneigh|mrstallion)', args.agent, flags=re.IGNORECASE)
     exit(1)
 
 prefilters = {key: True for key in load_yaml(args.prefilter).get('tags', [])}
-
-
-class SelectionSource:
-    def __init__(self, filename_with_ratio: str):
-        match = re.match(r'^(.*)(:[0-9.]%)$', filename_with_ratio)
-
-        if match is None:
-            filename = filename_with_ratio
-            ratio = 1.0
-        else:
-            filename = match.group(1)
-            ratio = float(match.group(2)) / 100.0
-
-        self.filename = filename
-        self.ratio = ratio
-        self.posts = self.load(filename)
-
-    def load(self, filename: str) -> List[PostEntity]:
-        posts = []
-
-        with open(filename, 'r') as fp:
-            for line in fp:
-                posts.append(PostEntity(json.loads(line)))
-
-        return posts
-
-
 selections = [SelectionSource(source) for source in args.source]
 
 # remove duplicates
@@ -78,16 +50,7 @@ for (selection, index) in selections:
         selection.posts = set(selection).intersection(before_posts)
 
 # balance selections
-total_ratio = math.fsum([sel.ratio for sel in selections])
-total_posts = sum([len(sel.posts) for sel in selections])
-
-for selection in selections:
-    intended_size = round(selection.ratio / total_ratio * total_posts)
-
-    if intended_size > len(selection.posts):
-        print(f'WARNING: Selection {selection.filename} has {len(selection.posts)} posts, but should have > {intended_size} posts to achieve the intended ratio. Using all {len(selection.posts)} posts.')
-    else:
-        selection.posts = selection.posts[0:intended_size]
+balance_selections(selections)
 
 # combine selections
 posts = [post for sel in selections for post in sel.posts]
@@ -106,7 +69,6 @@ for post in posts:
 
 # remove posts that have too few tags
 posts = [post for post in posts if len(post.tags) >= args.min_tags_per_post]
-
 
 # save tags
 if args.export_tags is not None:
@@ -171,4 +133,4 @@ if args.upload_to_s3 is not None:
     p.succeed('Dataset uploaded to S3')
 
 print('Done!')
-print(f'Created a dataset with {len(posts)} samples and {len(tag_counts)} tags')
+print(f'Dataset created with {len(posts)} samples and {len(tag_counts)} tags')

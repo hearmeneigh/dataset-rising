@@ -4,12 +4,12 @@
 > with custom image datasets.
 
 With this toolchain, you can:
-* Crawl and download metadata from 'booru' style image boards
-* Combine multiple sources of images, (including your own custom sources)
+* Crawl and download metadata and images from 'booru' style image boards
+* Combine multiple sources of images (including your own custom sources)
 * Build datasets based on your personal preferences
 * Train Stable Diffusion models on your datasets
-* Use only the parts you need – the toolchain has modular design and JSONL data exchange formats
-* Work with confidence that the tooling works with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
+* Use only the parts you need – the toolchain uses modular design, YAML configuration files, and JSONL data exchange formats
+* Work with confidence that the tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
 
 ## Requirements
 * Python `>= 3.9.6`
@@ -40,7 +40,7 @@ Warning: This step **removes** the MongoDB database container and all data store
 
 
 ## Full Example
-Below is a summary of each step in dataset generation process. For a full production-quality example, see [https://github.com/hearmeneigh/e621-rising-configs](e621-rising-configs) (NSFW).
+Below is a summary of each step in dataset generation process. For a full production-quality example, see [e621-rising-configs](https://github.com/hearmeneigh/e621-rising-configs) (NSFW).
 
 ### 0A. Setup
 Make sure you install Docker and Python 3 before continuing.
@@ -148,7 +148,8 @@ python3 build.py \
   --source '/tmp/negative.jsonl:20%' \       # etc.
   --source '/tmp/uncurated.jsonl:10%' \
   --output /tmp/my-dataset \
-  --upload-to-hf username/dataset-name       # optional
+  --upload-to-hf username/dataset-name \     # optional
+  --upload-to-s3 s3://some-bucket/some/path  # optional
 ```
 
 ### 6. Train a Model
@@ -177,7 +178,47 @@ python3 train.py \
   --upload-to-s3 s3://some-bucket/some/path # optional
 ```
 
+### 7. Generate Samples
+```bash
+cd <dataset-rising>/generate
+
+python3 generate.py \
+  --model /tmp/dataset-rising-v3-model \
+  --output /tmp/samples \
+  --prompt 'cat playing chess with a horse' \
+  --samples 100 \
+```
+
+### 8. Use the Model with Stable Diffusion WebUI
+In order to use the model with [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), it has to be converted to the `safetensors` format.
+
+```bash
+cd <dataset-rising>
+
+# Stable Diffusion XL models:
+python3 ./train/vendor/huggingface/diffusers/convert_diffusers_to_original_sdxl.py \
+  --model_path '/tmp/dataset-rising-v3-model' \
+  --checkpoint_path '/tmp/dataset-rising-v3-model.safetensors' \
+  --use_safetensors
+
+# Other Stable Diffusion models:
+python3 ./train/vendor/huggingface/diffusers/convert_diffusers_to_original_stable_diffusion.py \
+  --model_path '/tmp/dataset-rising-v3-model' \
+  --checkpoint_path '/tmp/dataset-rising-v3-model.safetensors' \
+  --use_safetensors
+  
+# Copy the model to the WebUI models directory:
+cp '/tmp/dataset-rising-v3-model.safetensors' '<webui-root>/models/Stable-diffusion'
+
+# Copy the model configuration file to WebUI models directory:
+cp '/tmp/dataset-rising-v3-model.yaml' '<webui-root>/models/Stable-diffusion'
+```
+
+
 ## Advanced Topics
+
+### Generating WebUI Tag Autocomplete Guides
+
 
 ### Importing Posts from Multiple Sources
 The `append` script allows you to import posts from additional sources.

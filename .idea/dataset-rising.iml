@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crawl" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/database" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dataset" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/train" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="inheritedJdk" />
