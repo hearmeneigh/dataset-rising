@@ -13,8 +13,8 @@ With this toolchain, you can:
 * Work with confidence that the end-to-end tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
 
 ## Requirements
-* Python `>= 3.9.6`
-* Docker `>= 24.0.0`
+* Python `>=3.9.6, <3.11`
+* Docker `>=24.0.0`
 
 ## Tested With
 * MacOS 13 (M1)
@@ -66,13 +66,14 @@ source ./venv/bin/activate
 ### 1. Download Metadata
 Dataset Rising has a crawler to download metadata (=posts and tags) from booru-style image boards.
 
-You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will be passed to the image board with every
-HTTP request. If you don't pick a user agent that uniquely identifies you,
+You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will
+be passed to the image board with every  HTTP request. If you don't pick a user agent that uniquely identifies you,
 the image boards will likely block your requests. For example:
 
 > `--agent 'my-imageboard-crawler/1.0 (user @my-username-on-the-imageboard)'`
 
-The crawler will automatically manage rate limits and retries. If you want to resume a previous (failed) crawl, use `--recover`.
+The crawler will automatically manage rate limits and retries. If you want to automatically resume a previous (failed)
+crawl, use `--recover`.
 
 ```bash
 cd <dataset-rising>/crawl
@@ -92,7 +93,7 @@ import the metadata downloaded in the previous step into MongoDB.
 
 If you want to adjust how the tag metadata is treated during the import,
 review files in `<dataset-rising>/examples/tag_normalizer` and set the optional
-tags `--prefilter FILE`, `--rewrites FILE`, `--aspect-ratios FILE`, `--category-weights FILE`, and
+parameters `--prefilter FILE`, `--rewrites FILE`, `--aspect-ratios FILE`, `--category-weights FILE`, and
 `--symbols FILE` accordingly.
 
 ```bash
@@ -105,14 +106,18 @@ python3 import.py --tags /tmp/e926.net-tags.jsonl --input /tmp/e926.net-posts.js
 After the metadata has been imported into a database, you can use selector files to select
 a subset of the posts in a dataset.
 
-Your goal is **not** to include **all** images, but instead to produce
+Your goal is **not** to include **all** images, but to produce
 a set of **high quality** samples. The selectors are the mechanism for that.
+
+Each selector contains a **positive** and **negative** list of tags. A post will be included
+by the selector, if it contains at least one tag from the **positive** list and none of the
+tags in the **negative** list.
 
 Note that a great dataset will contain positive **and** negative examples. If you only
 train your dataset with positive samples, your model will not be able to use negative
-prompts well.
+prompts well. That's why the examples below include four different types of selectors.
 
-Dataset Rising has example selectors available in `<dataset-rising>/examples/select`.
+Dataset Rising has example selectors available in [`<dataset-rising>/examples/select`](examples/select).
 
 To make sure your selectors are producing the kind of samples you want, use the `preview`
 script:
@@ -128,7 +133,8 @@ python3 preview.py --selector ./examples/select/positive/artists.yaml --output /
 ```
 
 ### 4. Select Images For a Dataset
-When you're ready to build a dataset, use `pick` to select posts from the database and store them in a JSONL file. 
+When you're confident that the selectors are producing the right kind of samples, it's time to select the posts for
+building a dataset. Use `pick` to select posts from the database and store them in a JSONL file. 
 
 ```bash
 cd <dataset-rising>/database
@@ -140,7 +146,7 @@ python3 pick.py --selector ./examples/select/uncurated.yaml --output /tmp/uncura
 ```
 
 ### 5. Build a Dataset
-After selecting the posts for the dataset, use `build` to download the images and build the dataset
+After selecting the posts for the dataset, use `build` to download the images and build the actual dataset.
 
 By default, the build script prunes all tags that have fewer than 100 samples. To adjust this limit, use `--min-posts-per-tag LIMIT`.
 
@@ -160,7 +166,8 @@ python3 build.py \
 ```
 
 ### 6. Train a Model
-Dataset Rising uses [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
+The dataset built by the `build` script is ready to be used for training as is.  Dataset Rising uses
+[Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
 
 To train a model, you will need to pick the base model to start from. The `--base-model` can be any
 [Diffusers](https://huggingface.co/docs/diffusers/index) compatible model, such as:
@@ -170,8 +177,8 @@ To train a model, you will need to pick the base model to start from. The `--bas
 * [stabilityai/stable-diffusion-2-1-base](https://huggingface.co/stabilityai/stable-diffusion-2-1-base)
 * [runwayml/stable-diffusion-v1-5](https://huggingface.co/runwayml/stable-diffusion-v1-5)
 
-Note that your training results will be improved if you set `--image_width` and `--image_height` to match the
-resolution the base model was trained with.
+Note that your training results will be improved significantly if you set `--image_width` and `--image_height`
+to match the resolution the base model was trained with.
 
 > This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
@@ -179,17 +186,26 @@ resolution the base model was trained with.
 cd <dataset-rising>/train
 
 python3 train.py \
-  --dataset username/dataset-name \  # Huggingface dataset or file path to Parquet directory 
-  --base-model stabilityai/stable-diffusion-xl-base-1.0 \
-  --output /tmp/dataset-rising-v3-model \
-  --image_width 1024 \  # use 512 for SD1.5 and SD2.0, unless you are using a 768x768 base model
-  --image_height 1024 \
-  --batch-size 1 \  # increase if you have a lot of GPU memory  
-  --upload-to-hf username/model-name \  # optional
-  --upload-to-s3 s3://some-bucket/some/path # optional
+  --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
+  --dataset-name 'username/dataset-name' \
+  --output '/tmp/dataset-rising-v3-model' \
+  --resolution 1024 \
+  --maintain-aspect-ratio \
+  --reshuffle-tags \
+  --tag-separator ' ' \
+  --random-flip \
+  --train-batch-size 32 \
+  --learning-rate 4e-6 \
+  --use-ema \
+  --max-grad-norm 1 \
+  --checkpointing-steps 1000 \
+  --lr-scheduler constant \
+  --lr-warmup-steps 0
 ```
 
 ### 7. Generate Samples
+After training, you can use the `generate` script to verify that the model is working as expected.
+
 ```bash
 cd <dataset-rising>/generate
 
