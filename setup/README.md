@@ -1,7 +1,6 @@
 # OS Setup Scripts
 
-These scripts are used to set up a new vanilla OS installation so that it can be used with
-the rest of the scripts in this repository.
+> Installer scripts that install Dataset Rising on top of a new vanilla OS installation
 
 Typically, you will only need to do this if you are setting up a new machine for training,
 for example a new EC2, Google Cloud, Vast AI, RunPod, etc. instance. 
@@ -14,4 +13,8 @@ You do not need to run these scripts on your local machine.
 * Installs AWS CLI
 * Installs Dataset Rising to `/workspace/tools/dataset-rising`
 
+### Usage
 
+```bash
+./setup-ubuntu-x64.sh
+```

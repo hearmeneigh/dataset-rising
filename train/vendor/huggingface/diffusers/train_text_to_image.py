@@ -196,7 +196,9 @@ def log_validation(vae, text_encoder, tokenizer, unet, args, accelerator, weight
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Simple example of a training script.")
+    parser = argparse.ArgumentParser(description="Dataset Rising training script.")
+
+    ## CHANGE: dashes instead of underscores
     parser.add_argument(
         "--input-perturbation", type=float, default=0, help="The scale of input perturbation. Recommended 0.1."
     )

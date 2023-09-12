@@ -4,10 +4,10 @@
 > with custom datasets.
 
 With this toolchain, you can:
-* Crawl and download metadata and images from 'booru' style image boards
-* Combine multiple sources of images (including your own custom sources)
-* Build datasets based on your personal preferences and filters
-* Train Stable Diffusion models with your datasets
+* **Crawl and download** metadata and images from 'booru' style image boards
+* Combine **multiple sources of images** (including your own custom sources)
+* **Build datasets** based on your personal preferences and filters
+* **Train Stable Diffusion models** with your datasets
 * Convert models into [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master) compatible models
 * Use only the parts you need – the toolchain uses modular design, YAML configuration files, and JSONL data exchange formats
 * Work with confidence that the end-to-end tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
@@ -57,6 +57,7 @@ cd <dataset-rising>
 
 ### 0B. Activate VENV
 Before running any of the scripts described below, you must activate the Python virtual environment.
+You should do this every time before using Dataset Rising scripts.
 
 ```bash
 cd <dataset-rising>
@@ -169,10 +170,10 @@ python3 build.py \
 The dataset built by the `build` script is ready to be used for training as is.  Dataset Rising uses
 [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
 
-To train a model, you will need to pick the base model to start from. The `--base-model` can be any
+To train a model, you will need to pick a base model to start from. The `--base-model` can be any
 [Diffusers](https://huggingface.co/docs/diffusers/index) compatible model, such as:
 
-* [hearmeneigh/e621-rising-v3](https://huggingface.co/hearmeneigh/e621-rising-v3)
+* [hearmeneigh/e621-rising-v3](https://huggingface.co/hearmeneigh/e621-rising-v3) (NSFW)
 * [stabilityai/stabilityai/stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)
 * [stabilityai/stable-diffusion-2-1-base](https://huggingface.co/stabilityai/stable-diffusion-2-1-base)
 * [runwayml/stable-diffusion-v1-5](https://huggingface.co/runwayml/stable-diffusion-v1-5)
@@ -245,6 +246,7 @@ cp '/tmp/dataset-rising-v3-model.yaml' '<webui-root>/models/Stable-diffusion'
 ## Advanced Topics
 
 ### Generating WebUI Tag Autocomplete Guides
+TBD
 
 
 ### Importing Posts from Multiple Sources
@@ -255,8 +257,10 @@ Use `import` to import the first source and define the tag namespace, then use `
 ```bash
 cd <dataset-rising>/database
 
-python3 import.py ...  #  main sources and tags
+# main sources and tags
+python3 import.py ...
 
+# additional sources
 python3 append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
 ```
 
