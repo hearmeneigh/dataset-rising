@@ -2,7 +2,7 @@ import json
 import re
 from typing import List
 
-from src.database.entities.post import PostEntity
+from database.entities.post import PostEntity
 
 
 class SelectionSource:

@@ -8,10 +8,10 @@ import json
 
 import ndjson
 
-from src.database.entities.post import PostEntity
-from src.database.selector.selector import Selector
-from src.database.utils.db_utils import connect_to_db
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from database.selector.selector import Selector
+from database.utils.db_utils import connect_to_db
+from utils.progress import Progress
 
 def get_args():
     parser = argparse.ArgumentParser(prog='Pick', description='Pick samples for a selector')
@@ -19,7 +19,7 @@ def get_args():
     parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file', required=True)
     parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file (JSONL)', required=True)
     parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate (default: max)', required=False, default=None)
-    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from', required=False, action='append', default=[])
+    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from  (default: [jpg, png])', required=False, action='append', default=[])
 
     args = parser.parse_args()
 

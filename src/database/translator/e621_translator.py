@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from src.database.entities.tag import TagProtoEntity
-from src.database.utils.enums import Source, Category
-from src.database.entities.post import PostEntity
-from src.database.translator.translator import PostTranslator, TagTranslator
+from database.entities.tag import TagProtoEntity
+from database.utils.enums import Source, Category
+from database.entities.post import PostEntity
+from database.translator.translator import PostTranslator, TagTranslator
 
 e621_categories = {
     0: Category.GENERAL,

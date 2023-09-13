@@ -6,9 +6,9 @@ from pymongo.database import Database
 import yaml
 from yamlinclude import YamlIncludeConstructor
 
-from src.database.entities.post import PostEntity
-from src.database.entities.tag import TagEntity
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from database.entities.tag import TagEntity
+from utils.progress import Progress
 
 YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader)
 

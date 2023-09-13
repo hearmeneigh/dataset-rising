@@ -10,10 +10,10 @@ import jinja2
 import ndjson
 from jinja2 import Template
 
-from src.database.entities.post import PostEntity
-from src.database.selector.selector import Selector
-from src.database.utils.db_utils import connect_to_db
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from database.selector.selector import Selector
+from database.utils.db_utils import connect_to_db
+from utils.progress import Progress
 
 
 def get_args():
@@ -22,8 +22,8 @@ def get_args():
     parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file', required=True)
     parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file or path', required=True)
     parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate per aggregate', required=False, default=10)
-    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from', required=False, action='append', default=[])
-    parser.add_argument('-f', '--output-format', metavar='FORMAT', type=str, help='Output format', required=False, choices=['html', 'jsonl'], default='html')
+    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from (default: [jpg, png])', required=False, action='append', default=[])
+    parser.add_argument('-f', '--output-format', metavar='FORMAT', type=str, help='Output format phtml, jsonl]', required=False, choices=['html', 'jsonl'], default='html')
     parser.add_argument('-a', '--aggregate', help='Aggregate categories (=preview how the whole selector will perform, not the categories)', default=False, action='store_true')
     parser.add_argument('-t', '--template', metavar='FILE', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
 

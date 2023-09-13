@@ -1,4 +1,4 @@
-from src.database.utils.enums import Source
+from database.utils.enums import Source
 
 
 class ImplicationEntity:

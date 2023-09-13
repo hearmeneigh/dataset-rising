@@ -1,7 +1,8 @@
 from typing import Optional
 
-from src.crawl.crawler.crawler import Crawler
+from crawl.crawler.crawler import Crawler
 import urllib.parse
+
 
 def get_e926_index_crawler(output_file: str):
     return Crawler(

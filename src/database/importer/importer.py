@@ -3,9 +3,9 @@ import pymongo.errors
 
 from pymongo.database import Database
 
-from src.database.tag_normalizer.tag_normalizer import TagNormalizer
-from src.database.translator.translator import PostTranslator
-from src.utils.progress import Progress
+from database.tag_normalizer.tag_normalizer import TagNormalizer
+from database.translator.translator import PostTranslator
+from utils.progress import Progress
 
 
 class Importer:

@@ -1,7 +1,7 @@
 import math
 from typing import List
 
-from src.dataset.build import SelectionSource
+from dataset.build import SelectionSource
 
 
 def balance_selections(selections: List[SelectionSource]):

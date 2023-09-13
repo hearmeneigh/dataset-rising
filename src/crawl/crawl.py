@@ -4,7 +4,7 @@ import argparse
 import re
 import os
 
-from src.crawl.crawler.helpers import get_crawler
+from crawl.crawler.helpers import get_crawler
 
 
 def get_args():
@@ -12,10 +12,10 @@ def get_args():
 
     parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output JSONL file', required=True)
     parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
-    parser.add_argument('-t', '--type', metavar='TYPE', type=str, help='Crawl type', required=True, choices=['search', 'index', 'tags', 'implications'])
-    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Crawl source', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
+    parser.add_argument('-t', '--type', metavar='TYPE', type=str, help='Crawl type [search, index, tags, implications]', required=True, choices=['search', 'index', 'tags', 'implications'])
+    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Crawl source [e926, e621, gelbooru, danbooru]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
     parser.add_argument('-q', '--query', metavar='KEYWORD', type=str, help='Crawl query', required=False)
-    parser.add_argument('-r', '--recover', default=False, action='store_true')
+    parser.add_argument('-r', '--recover', default=False, action='store_true', help='Recover from last crawl position')
 
     return parser.parse_args()
 

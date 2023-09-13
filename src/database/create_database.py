@@ -1,4 +1,4 @@
-from src.database.utils.db_utils import connect_to_db
+from database.utils.db_utils import connect_to_db
 
 
 def main():

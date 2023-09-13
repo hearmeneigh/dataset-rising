@@ -2,7 +2,7 @@ from typing import Optional
 
 from PIL import Image
 
-from src.database.entities.post import PostEntity
+from database.entities.post import PostEntity
 
 
 def load_image(file: bytes, post: PostEntity) -> Optional[Image.Image]:

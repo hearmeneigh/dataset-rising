@@ -5,7 +5,7 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 from call_throttle import throttle
 
-from src.database.entities.post import PostEntity
+from database.entities.post import PostEntity
 
 global_session = requests.Session()
 global_retries = Retry(total=10, backoff_factor=0.1)

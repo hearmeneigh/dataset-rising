@@ -1,9 +1,9 @@
 from typing import Union, List, Optional
 
-from src.database.entities.implication import ImplicationEntity
-from src.database.entities.post import PostEntity
-from src.database.entities.tag import TagEntity, TagProtoEntity
-from src.database.tag_normalizer.tag_normalizer import TagNormalizer
+from database.entities.implication import ImplicationEntity
+from database.entities.post import PostEntity
+from database.entities.tag import TagEntity, TagProtoEntity
+from database.tag_normalizer.tag_normalizer import TagNormalizer
 
 
 class Translator:

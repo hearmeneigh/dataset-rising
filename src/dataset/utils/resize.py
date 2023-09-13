@@ -2,7 +2,7 @@ from typing import Optional
 
 from PIL import Image
 
-from src.database.entities.post import PostEntity
+from database.entities.post import PostEntity
 
 
 def resize_image(im: Image.Image, post: PostEntity, max_width: int, max_height: int) -> Optional[Image.Image]:

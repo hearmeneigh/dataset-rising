@@ -1,8 +1,8 @@
 from pymongo.database import Database
 
-from src.database.entities.tag import TagEntity, TagVersion
-from src.database.tag_normalizer.tag_normalizer import TagNormalizer
-from src.utils.progress import Progress
+from database.entities.tag import TagEntity, TagVersion
+from database.tag_normalizer.tag_normalizer import TagNormalizer
+from utils.progress import Progress
 
 
 def load_normalizer_from_database(db: Database):

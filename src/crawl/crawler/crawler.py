@@ -10,6 +10,7 @@ from requests.adapters import HTTPAdapter
 from call_throttle import throttle
 import json
 
+
 class Crawler:
     fp = None
     writer = None

@@ -9,12 +9,12 @@ import random
 import json
 import os
 
-from src.dataset.utils.balance import balance_selections
-from src.dataset.utils.format import format_posts_for_dataset
-from src.dataset.utils.prune import prune_and_filter_tags
-from src.utils.progress import Progress
-from src.utils.load_yaml import load_yaml
-from src.dataset.utils.selection_source import SelectionSource
+from dataset.utils.balance import balance_selections
+from dataset.utils.format import format_posts_for_dataset
+from dataset.utils.prune import prune_and_filter_tags
+from utils.progress import Progress
+from utils.load_yaml import load_yaml
+from dataset.utils.selection_source import SelectionSource
 
 def get_args():
     parser = argparse.ArgumentParser(prog='Build', description='Build an image dataset from JSONL file(s)')
@@ -26,8 +26,8 @@ def get_args():
     parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/dataset/prefilter.yaml')
     parser.add_argument('--image-width', metavar='PIXELS', type=int, help='Maximum width for stored images', required=False, default=4096)
     parser.add_argument('--image-height', metavar='PIXELS', type=int, help='Maximum height for stored images', required=False, default=4096)
-    parser.add_argument('--image_format', metavar='FORMAT', type=str, help='Storage image format', choices=['JPEG', 'PNG'], required=False, default='JPEG')
-    parser.add_argument('--image_quality', metavar='PERCENTAGE', type=str, help='Storage image quality', required=False, default=85)
+    parser.add_argument('--image_format', metavar='FORMAT', type=str, help='Storage image format [jpg, png]', choices=['jpg', 'png'], required=False, default='jpg')
+    parser.add_argument('--image_quality', metavar='PERCENTAGE', type=str, help='Storage image quality (JPEG only)', required=False, default=85)
     parser.add_argument('--num-proc', metavar='COUNT', type=int, help='Maximum number of parallel processes', required=False, default=1)
     parser.add_argument('--upload-to-huggingface', metavar='USER_NAME/DATASET_NAME', type=int, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
     parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)

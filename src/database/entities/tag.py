@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Dict
 
-from src.database.utils.enums import Source, Category
+from database.utils.enums import Source, Category
 
 
 class AlternativeTagSource:

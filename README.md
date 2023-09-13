@@ -21,51 +21,17 @@ With this toolchain, you can:
 * Ubuntu 22 (x86_64)
 
 
-## Setting Up
-Creates a virtual environment, installs packages, and sets up a MongoDB database on Docker. 
-
-```bash
-./up.sh
-```
-
-## Shutting Down
-Stops the MongoDB database container. The database can be restarted by running `./up.sh` again.
-
-```bash
-./down.sh
-```
-
-
-## Uninstall
-Warning: This step **removes** the MongoDB database container and all data stored on it.
-
-```bash
-./uninstall.sh
-```
-
-
 ## Full Example
 Below is a summary of each step in dataset generation process. For a full production-quality example, see [e621-rising-configs](https://github.com/hearmeneigh/e621-rising-configs) (NSFW).
 
-### 0A. Setup
-Make sure you install Docker and Python 3 before continuing.
+### 0. Installation
 
 ```bash
-cd <dataset-rising>
-./up.sh
+pip3 install DatasetRising
 ```
 
-### 0B. Activate VENV
-Before running any of the scripts described below, you must activate the Python virtual environment.
-You should do this every time before using Dataset Rising scripts.
-
-```bash
-cd <dataset-rising>
-source ./venv/bin/activate
-```
-
-### 1. Download Metadata
-Dataset Rising has a crawler to download metadata (=posts and tags) from booru-style image boards.
+### 1. Download Metadata (Posts, Tags, ...)
+Dataset Rising has a crawler (`dr-crawl`) to download metadata (=posts and tags) from booru-style image boards.
 
 You must select a unique user agent string for your crawler (`--agent AGENT_STRING`). This string will
 be passed to the image board with every  HTTP request. If you don't pick a user agent that uniquely identifies you,
@@ -77,30 +43,26 @@ The crawler will automatically manage rate limits and retries. If you want to au
 crawl, use `--recover`.
 
 ```bash
-cd <dataset-rising>/crawl
-
 ## download tag metadata to /tmp/tags.jsonl
-python3 crawl.py --output /tmp/e962-tags.jsonl --type tags --source e926 --recover --agent '<AGENT_STRING>'
+dr-crawl --output /tmp/e962-tags.jsonl --type tags --source e926 --recover --agent '<AGENT_STRING>'
 
 ## download posts metadata to /tmp/e926.net-posts.jsonl
-python3 crawl.py --output /tmp/e926.net-posts.jsonl --type index --source e926 --recover --agent '<AGENT_STRING>'
+dr-crawl --output /tmp/e926.net-posts.jsonl --type index --source e926 --recover --agent '<AGENT_STRING>'
 ```
 
 ### 2. Import Metadata
 Once you have enough post and tag metadata, it's time to import the data into a database.
 
-Dataset Rising uses MongoDB as a store for the post and tag metadata. Use `import` to
+Dataset Rising uses MongoDB as a store for the post and tag metadata. Use `dr-import` to
 import the metadata downloaded in the previous step into MongoDB.
 
 If you want to adjust how the tag metadata is treated during the import,
-review files in `<dataset-rising>/examples/tag_normalizer` and set the optional
+review files in [`<dataset-rising>/examples/tag_normalizer`](./examples/tag_normalizer) and set the optional
 parameters `--prefilter FILE`, `--rewrites FILE`, `--aspect-ratios FILE`, `--category-weights FILE`, and
 `--symbols FILE` accordingly.
 
 ```bash
-cd <dataset-rising>/database
-
-python3 import.py --tags /tmp/e926.net-tags.jsonl --input /tmp/e926.net-posts.jsonl --source e926
+dr-import --tags /tmp/e926.net-tags.jsonl --input /tmp/e926.net-posts.jsonl --source e926
 ```
 
 ### 3. Preview Selectors
@@ -120,43 +82,39 @@ prompts well. That's why the examples below include four different types of sele
 
 Dataset Rising has example selectors available in [`<dataset-rising>/examples/select`](examples/select).
 
-To make sure your selectors are producing the kind of samples you want, use the `preview`
+To make sure your selectors are producing the kind of samples you want, use the `dr-preview`
 script:
 
 ```bash
-cd <dataset-rising>/database
-
 # generate a HTML preview of how the selector will perform (note: --aggregate is required):
-python3 preview.py --selector ./examples/select/curated.yaml --output /tmp/curated-previews --limit 1000 --output --aggregate
+dr-preview --selector ./examples/select/curated.yaml --output /tmp/curated-previews --limit 1000 --output --aggregate
 
 # generate a HTML preview of how each sub-selector will perform:
-python3 preview.py --selector ./examples/select/positive/artists.yaml --output /tmp/curated-artists
+dr-preview --selector ./examples/select/positive/artists.yaml --output /tmp/curated-artists
 ```
 
 ### 4. Select Images For a Dataset
 When you're confident that the selectors are producing the right kind of samples, it's time to select the posts for
-building a dataset. Use `pick` to select posts from the database and store them in a JSONL file. 
+building a dataset. Use `dr-pick` to select posts from the database and store them in a JSONL file. 
 
 ```bash
 cd <dataset-rising>/database
 
-python3 pick.py --selector ./examples/select/curated.yaml --output /tmp/curated.jsonl
-python3 pick.py --selector ./examples/select/negative.yaml --output /tmp/negative.jsonl
-python3 pick.py --selector ./examples/select/positive.yaml --output /tmp/positive.jsonl
-python3 pick.py --selector ./examples/select/uncurated.yaml --output /tmp/uncurated.jsonl
+dr-select --selector ./examples/select/curated.yaml --output /tmp/curated.jsonl
+dr-select --selector ./examples/select/negative.yaml --output /tmp/negative.jsonl
+dr-select --selector ./examples/select/positive.yaml --output /tmp/positive.jsonl
+dr-select --selector ./examples/select/uncurated.yaml --output /tmp/uncurated.jsonl
 ```
 
 ### 5. Build a Dataset
-After selecting the posts for the dataset, use `build` to download the images and build the actual dataset.
+After selecting the posts for the dataset, use `dr-build` to download the images and build the actual dataset.
 
 By default, the build script prunes all tags that have fewer than 100 samples. To adjust this limit, use `--min-posts-per-tag LIMIT`.
 
 The build script will also prune all images that have fewer than 10 tags. To adjust this limit, use `--min-tags-per-post LIMIT`.
 
 ```bash
-cd <dataset-rising>/dataset
-
-python3 build.py \
+dr-build \
   --source '/tmp/curated.jsonl:30%' \        # 30% of the dataset will be curated samples
   --source '/tmp/positive.jsonl:40%' \       # 40% of the dataset will be positive samples
   --source '/tmp/negative.jsonl:20%' \       # etc.
@@ -167,7 +125,7 @@ python3 build.py \
 ```
 
 ### 6. Train a Model
-The dataset built by the `build` script is ready to be used for training as is.  Dataset Rising uses
+The dataset built by the `dr-build` script is ready to be used for training as is.  Dataset Rising uses
 [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
 
 To train a model, you will need to pick a base model to start from. The `--base-model` can be any
@@ -184,9 +142,7 @@ to match the resolution the base model was trained with.
 > This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
 ```bash
-cd <dataset-rising>/train
-
-python3 train.py \
+dr-train \
   --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
   --dataset-name 'username/dataset-name' \
   --output '/tmp/dataset-rising-v3-model' \
@@ -205,14 +161,12 @@ python3 train.py \
 ```
 
 ### 7. Generate Samples
-After training, you can use the `generate` script to verify that the model is working as expected.
+After training, you can use the `dr-generate` script to verify that the model is working as expected.
 
 ```bash
-cd <dataset-rising>/generate
-
-python3 generate.py \
-  --model /tmp/dataset-rising-v3-model \
-  --output /tmp/samples \
+dr-generate \
+  --model '/tmp/dataset-rising-v3-model' \
+  --output '/tmp/samples' \
   --prompt 'cat playing chess with a horse' \
   --samples 100 \
 ```
@@ -221,16 +175,14 @@ python3 generate.py \
 In order to use the model with [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), it has to be converted to the `safetensors` format.
 
 ```bash
-cd <dataset-rising>
-
 # Stable Diffusion XL models:
-python3 ./train/vendor/huggingface/diffusers/convert_diffusers_to_original_sdxl.py \
+dr-convert-sdxl \
   --model_path '/tmp/dataset-rising-v3-model' \
   --checkpoint_path '/tmp/dataset-rising-v3-model.safetensors' \
   --use_safetensors
 
 # Other Stable Diffusion models:
-python3 ./train/vendor/huggingface/diffusers/convert_diffusers_to_original_stable_diffusion.py \
+dr-convert-sd \
   --model_path '/tmp/dataset-rising-v3-model' \
   --checkpoint_path '/tmp/dataset-rising-v3-model.safetensors' \
   --use_safetensors
@@ -295,8 +247,42 @@ accelerate launch \
     --lr-warmup-steps 0
 ```
 
-### Architecture
 
+## Developers
+
+### Setting Up
+Creates a virtual environment, installs packages, and sets up a MongoDB database on Docker. 
+
+```bash
+cd <dataset-rising>
+./up.sh
+```
+
+### Shutting Down
+Stops the MongoDB database container. The database can be restarted by running `./up.sh` again.
+
+```bash
+cd <dataset-rising>
+./down.sh
+```
+
+
+### Uninstall
+Warning: This step **removes** the MongoDB database container and all data stored on it.
+
+```bash
+cd <dataset-rising>
+./uninstall.sh
+```
+
+### Deployments
+```bash
+python3 -m pip install --upgrade build twine
+python3 -m build 
+python3 -m twine upload dist/*
+```
+
+### Architecture
 ```mermaid
 flowchart TD
     CRAWL[Crawl/Download posts and tags] -- JSONL --> IMPORT
@@ -308,12 +294,4 @@ flowchart TD
     PICK[Select samples] -- JSONL --> BUILD
     BUILD[Build dataset] -- HF Dataset/Parquet --> TRAIN
     TRAIN[Train model]
-```
-
-
-### Deployments
-```bash
-python3 -m pip install --upgrade build twine
-python3 -m build 
-python3 -m twine upload dist/*
 ```

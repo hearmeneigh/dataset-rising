@@ -9,11 +9,30 @@ import ndjson
 from jinja2 import Template
 from pymongo.database import Database
 
-from src.database.entities.post import PostEntity
-from src.database.selector.selector import Selector
-from src.database. utils.db_utils import connect_to_db
-from src.database.utils.enums import Category
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from database.selector.selector import Selector
+from database. utils.db_utils import connect_to_db
+from database.utils.enums import Category
+from utils.progress import Progress
+
+
+def get_args():
+    parser = argparse.ArgumentParser(prog='Gap', description='Generate category gap analysis for selectors')
+
+    parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file(s)', required=True, action='append', default=[])
+    parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file or path', required=True)
+    parser.add_argument('-c', '--category', metavar='CATEGORY', type=str, help=f'Only list tags which 1) are in this specified category; and 2) are NOT matches with any of the selectors [{", ".join([c for c in Category])}]', required=True, choices=[c for c in Category])
+    parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate per aggregate', required=False, default=10)
+    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from (default: [jpg, png])', required=False, action='append', default=[])
+    parser.add_argument('-f', '--output-format',metavar='FORMAT', type=str, help='Output format [html, jsonl]', required=False, choices=['html', 'jsonl'], default='html')
+    parser.add_argument('-t', '--template', metavar='FILE', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
+
+    args = parser.parse_args()
+
+    if len(args.image_format) == 0:
+        args.image_format = ['jpg', 'png']
+
+    return args
 
 
 def get_file_parts(path: str, file_subtitle) -> (str, str, str):
@@ -106,25 +125,6 @@ def sample_posts(tag_name: str, limit: int, db: Database, image_format: List[str
         {'$sample': {'size': limit}}
     ]))
     return tag_name, post_count, [PostEntity(post) for post in posts]
-
-
-def get_args():
-    parser = argparse.ArgumentParser(prog='Gap', description='Generate category gap analysis for selectors')
-
-    parser.add_argument('-s', '--selector', metavar='FILE', type=str, help='Selector YAML file(s)', required=True, action='append', default=[])
-    parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output file or path', required=True)
-    parser.add_argument('-c', '--category', metavar='CATEGORY', type=str, help='Only list tags which 1) are in this specified category; and 2) are NOT matches with any of the selectors', required=True, choices=[c for c in Category])
-    parser.add_argument('-l', '--limit', metavar='COUNT', type=int, help='Number of samples to generate per aggregate', required=False, default=10)
-    parser.add_argument('-i', '--image-format', metavar='FORMAT', type=str, help='Image formats to select from', required=False, action='append', default=[])
-    parser.add_argument('-f', '--output-format', metavar='FORMAT', type=str, help='Output format', required=False, choices=['html', 'jsonl'], default='html')
-    parser.add_argument('-t', '--template', metavar='FILE', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
-
-    args = parser.parse_args()
-
-    if len(args.image_format) == 0:
-        args.image_format = ['jpg', 'png']
-
-    return args
 
 
 def main():

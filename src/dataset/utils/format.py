@@ -2,8 +2,8 @@ import io
 import random
 from typing import List
 
-from src.database.entities.post import PostEntity
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from utils.progress import Progress
 
 from .download import download_image
 from .load import load_image

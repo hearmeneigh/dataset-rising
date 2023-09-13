@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from src.database.entities.post import PostEntity
+from database.entities.post import PostEntity
 
 
 def prune_and_filter_tags(posts: List[PostEntity], prefilters: Dict[str], min_posts_per_tag: int):

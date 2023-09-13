@@ -4,10 +4,10 @@ from typing import List, Dict, Union, Optional, Callable
 
 from anyascii import anyascii
 
-from src.database.entities.post import PostEntity
-from src.database.utils.enums import Category, Source, Rating
-from src.database.entities.tag import TagEntity, TagProtoEntity, TagAlias, TagVersion
-from src.utils.progress import Progress
+from database.entities.post import PostEntity
+from database.utils.enums import Category, Source, Rating
+from database.entities.tag import TagEntity, TagProtoEntity, TagAlias, TagVersion
+from utils.progress import Progress
 
 scoreAboveMilestones = [250, 500, 1000, 1500, 2000]
 scoreBelowMilestones = [0, 25, 50, 100, 250]

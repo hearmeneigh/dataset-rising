@@ -1,6 +1,6 @@
 [project]
 name = 'DatasetRising'
-version = '0.1.1'
+version = '0.1.5'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
 requires-python = '>=3.9.6,<3.11'
@@ -41,7 +41,7 @@ classifiers = [
 'dr-append' = 'database.append:main'
 'dr-gap' = 'database.gap:main'
 'dr-import' = 'database.import:main'
-'dr-pick' = 'database.pick:main'
+'dr-select' = 'database.pick:main'
 'dr-preview' = 'database.preview:main'
 'dr-build' = 'dataset.build:main'
 'dr-train' = 'train.train:main'
