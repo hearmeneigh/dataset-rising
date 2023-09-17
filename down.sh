@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+source venv/bin/activate
+
 cd database
-./stop-mongodb.sh
-cd ..
+python3 down.py

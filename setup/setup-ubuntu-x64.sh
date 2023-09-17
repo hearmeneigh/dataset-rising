@@ -12,23 +12,32 @@ else
   SUDO=''
 fi
 
-if [ ! -f "$(which python3.10)" ]
+# Install Python 3.11
+if [ ! -f "$(which python3.11)" ]
 then
   ${SUDO} add-apt-repository ppa:deadsnakes/ppa -y
-  # torchvision does not support 3.11 yet
-  ${SUDO} apt install python3.10 python3.10-dev python3.10-venv -y
+  ${SUDO} apt install python3.11 python3.11-dev python3.11-venv -y
 fi
 
 set -ex
 
-${SUDO} apt-get -y install git-lfs lrzsz zip
+# Install tools
+${SUDO} apt-get -y install git-lfs lrzsz zip docker.io
 git config --global credential.helper store
 
+if [ "$(whoami)" != 'root' ]
+then
+  ${SUDO} usermod -aG docker "$(whoami)"
+  ${SUDO} su - "$(whoami)"
+fi
+
+# Install AWS CLI
 mkdir /tmp/aws
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/aws/awscliv2.zip"
 cd /tmp/aws
 unzip awscliv2.zip
 ${SUDO} /tmp/aws/aws/install
+
 
 ${SUDO} mkdir -p "${BASE_PATH}"
 
@@ -41,16 +50,10 @@ mkdir -p "${BASE_PATH}/cache/huggingface"
 mkdir -p "${BASE_PATH}/output"
 mkdir -p "${BASE_PATH}/checkpoints"
 mkdir -p "${BASE_PATH}/downloads"
-
 mkdir -p "${BASE_PATH}/tools"
-cd "${BASE_PATH}/tools"
-git clone https://github.com/hearmeneigh/dataset-rising.git
 
-# dependencies
-cd ${BASE_PATH}/tools/dataset-rising
-python3.10 -m venv venv
-source ./venv/bin/activate
-pip install -v -r requirements.txt
+cd "${BASE_PATH}/tools"
+python3.11 -m pip install --upgrade DatasetRising
 
 # xformers
 # pip install ninja

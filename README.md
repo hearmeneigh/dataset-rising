@@ -13,8 +13,8 @@ With this toolchain, you can:
 * Work with confidence that the end-to-end tooling has been tested with Nvidia's RTX30x0, RTX40x0, A100, and H100 GPUs
 
 ## Requirements
-* Python `>=3.9.6, <3.11`
-* Docker `>=24.0.0`
+* Python `>=3.8`
+* Docker `>=22.0.0`
 
 ## Tested With
 * MacOS 13 (M1)
@@ -25,9 +25,15 @@ With this toolchain, you can:
 Below is a summary of each step in dataset generation process. For a full production-quality example, see [e621-rising-configs](https://github.com/hearmeneigh/e621-rising-configs) (NSFW).
 
 ### 0. Installation
-
 ```bash
+# install DatasetRising
 pip3 install DatasetRising
+
+# start MongoDB database; use `dr-db-down` to stop
+dr-db-up
+
+# create database in MongoDB
+dr-db-create
 ```
 
 ### 1. Download Metadata (Posts, Tags, ...)
@@ -47,10 +53,13 @@ crawl, use `--recover`.
 dr-crawl --output /tmp/e962-tags.jsonl --type tags --source e926 --recover --agent '<AGENT_STRING>'
 
 ## download posts metadata to /tmp/e926.net-posts.jsonl
-dr-crawl --output /tmp/e926.net-posts.jsonl --type index --source e926 --recover --agent '<AGENT_STRING>'
+dr-crawl --output /tmp/e926.net-posts.jsonl --type posts --source e926 --recover --agent '<AGENT_STRING>'
 ```
 
 ### 2. Import Metadata
+
+> This section requires a running MongoDB database, which you can start with `dr-db-up` command.
+
 Once you have enough post and tag metadata, it's time to import the data into a database.
 
 Dataset Rising uses MongoDB as a store for the post and tag metadata. Use `dr-import` to
@@ -62,10 +71,12 @@ parameters `--prefilter FILE`, `--rewrites FILE`, `--aspect-ratios FILE`, `--cat
 `--symbols FILE` accordingly.
 
 ```bash
-dr-import --tags /tmp/e926.net-tags.jsonl --input /tmp/e926.net-posts.jsonl --source e926
+dr-import --tags /tmp/e926.net-tags.jsonl --posts /tmp/e926.net-posts.jsonl --source e926
 ```
 
 ### 3. Preview Selectors
+> This section requires a running MongoDB database, which you can start with `dr-db-up` command.
+
 After the metadata has been imported into a database, you can use selector files to select
 a subset of the posts in a dataset.
 
@@ -94,6 +105,8 @@ dr-preview --selector ./examples/select/positive/artists.yaml --output /tmp/cura
 ```
 
 ### 4. Select Images For a Dataset
+> This section requires a running MongoDB database, which you can start with `dr-db-up` command.
+
 When you're confident that the selectors are producing the right kind of samples, it's time to select the posts for
 building a dataset. Use `dr-pick` to select posts from the database and store them in a JSONL file. 
 
@@ -194,12 +207,32 @@ cp '/tmp/dataset-rising-v3-model.safetensors' '<webui-root>/models/Stable-diffus
 cp '/tmp/dataset-rising-v3-model.yaml' '<webui-root>/models/Stable-diffusion'
 ```
 
+## Uninstall
+The only part of Dataset Rising that requires uninstallation is the MongoDB database. You can uninstall the database
+with the following commands:
+
+```bash
+# Shut down MongoDB instance
+dr-db-down
+
+# Remove MongoDB container and its data -- warning! data loss will occur
+dr-db-uninstall
+```
 
 ## Advanced Topics
 
 ### Generating WebUI Tag Autocomplete Guides
 TBD
 
+
+### Resetting the Database
+To reset the database, run the following commands.
+
+> **Warning: You will lose all data in the database.**
+
+```bash
+dr-db-uninstall && dr-db-up && dr-db-create
+```
 
 ### Importing Posts from Multiple Sources
 The `append` script allows you to import posts from additional sources.
@@ -210,10 +243,10 @@ Use `import` to import the first source and define the tag namespace, then use `
 cd <dataset-rising>/database
 
 # main sources and tags
-python3 import.py ...
+python3 dr_import.py ...
 
 # additional sources
-python3 append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
+python3 dr_append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
 ```
 
 ### Multi-GPU Training
@@ -230,7 +263,7 @@ accelerate config
 # run training
 accelerate launch \
   --multi_gpu \
-  train.py \
+  dr_train.py \
     --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
     --dataset-name 'username/dataset-name' \
     --resolution 1024 \

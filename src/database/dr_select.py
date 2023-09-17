@@ -48,6 +48,8 @@ def get_file_parts(path: str, file_subtitle) -> (str, str, str):
 
 
 def save_results_to_jsonl(filename: str, results: Generator[PostEntity, None, None], progress: Progress):
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
     with open(filename, 'w') as fp:
         writer = ndjson.writer(fp)
         i = 0

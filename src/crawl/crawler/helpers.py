@@ -147,7 +147,7 @@ def get_danbooru_tag_crawler(output_file: str):
 
 def get_crawler(source: str, type: str, output_file: str, search_query: Optional[str]) -> Crawler:
     if source == 'e926':
-        if type == 'index':
+        if type == 'posts':
             return get_e926_index_crawler(output_file)
         elif type == 'search':
             return get_e926_search_crawler(output_file, search_query)
@@ -156,7 +156,7 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
         elif type == 'implications':
             return get_e926_implications_crawler(output_file)
     elif source == 'e621':
-        if type == 'index':
+        if type == 'posts':
             return get_e621_index_crawler(output_file)
         elif type == 'search':
             return get_e621_search_crawler(output_file, search_query)
@@ -165,13 +165,13 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
         elif type == 'implications':
             return get_e621_implications_crawler(output_file)
     elif source == 'gelbooru':
-        if type == 'index':
+        if type == 'posts':
             return get_gelbooru_index_crawler(output_file)
         elif type == 'search':
             return get_gelbooru_search_crawler(output_file, search_query)
         elif type == 'tags':
             return get_gelbooru_tag_crawler(output_file)
-    elif source == 'danbooru':
+    elif source == 'posts':
         if type == 'index':
             return get_danbooru_index_crawler(output_file)
         elif type == 'search':

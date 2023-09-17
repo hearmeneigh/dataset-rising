@@ -27,15 +27,10 @@ def get_args():
     parser.add_argument('-a', '--aggregate', help='Aggregate categories (=preview how the whole selector will perform, not the categories)', default=False, action='store_true')
     parser.add_argument('-t', '--template', metavar='FILE', type=str, help='HTML template file', required=False, default='../examples/preview/preview.html.jinja')
 
-
     args = parser.parse_args()
 
     if len(args.image_format) == 0:
         args.image_format = ['jpg', 'png']
-
-    if args.aggregate and args.gap:
-        print('Cannot use --aggregate and --gap at the same time')
-        exit(1)
 
     return args
 

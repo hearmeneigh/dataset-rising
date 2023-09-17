@@ -1,9 +1,9 @@
 [project]
 name = 'DatasetRising'
-version = '0.1.5'
+version = '0.1.18'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
-requires-python = '>=3.9.6,<3.11'
+requires-python = '>=3.8'
 license = { file = 'LICENSE.md' }
 dynamic = ['dependencies']
 
@@ -22,8 +22,10 @@ classifiers = [
     'Operating System :: POSIX',
     'Operating System :: POSIX :: Linux',
     'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
     'Topic :: Scientific/Engineering :: Image Processing'
 ]
@@ -34,19 +36,20 @@ classifiers = [
 'Source' = 'https://github.com/hearmeneigh/dataset-rising'
 
 [project.scripts]
-'dr-db-up' = 'database.up:main'
-'dr-db-down' = 'database.down:main'
-'dr-db-uninstall' = 'database.uninstall:main'
-'dr-crawl' = 'crawl.crawl:main'
-'dr-append' = 'database.append:main'
-'dr-gap' = 'database.gap:main'
-'dr-import' = 'database.import:main'
-'dr-select' = 'database.pick:main'
-'dr-preview' = 'database.preview:main'
-'dr-build' = 'dataset.build:main'
-'dr-train' = 'train.train:main'
-'dr-convert-sd' = 'train.convert_sd:main'
-'dr-convert-sdxl' = 'train.convert_sdxl:main'
+'dr-db-up' = 'database.dr_db_up:main'
+'dr-db-create' = 'database.dr_db_create:main'
+'dr-db-down' = 'database.dr_db_down:main'
+'dr-db-uninstall' = 'database.dr_db_uninstall:main'
+'dr-crawl' = 'crawl.dr_crawl:main'
+'dr-append' = 'database.dr_append:main'
+'dr-gap' = 'database.dr_gap:main'
+'dr-import' = 'database.dr_import:main'
+'dr-select' = 'database.dr_select:main'
+'dr-preview' = 'database.dr_preview:main'
+'dr-build' = 'dataset.dr_build:main'
+'dr-train' = 'train.dr_train:main'
+'dr-convert-sd' = 'train.dr_convert_sd:main'
+'dr-convert-sdxl' = 'train.dr_convert_sdxl:main'
 
 [tools.setuptools]
 include-package-data = true

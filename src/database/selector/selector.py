@@ -1,6 +1,5 @@
 import os
-from functools import reduce
-from operator import add
+import pydash
 from typing import Dict, List, Union, Generator, Optional
 from pymongo.database import Database
 import yaml
@@ -44,11 +43,15 @@ class Selector:
                     yaml_includes = self.config
                     yaml_excludes = []
 
-                proto_includes = [self.resolve_tag(k, True) for k in reduce(add, yaml_includes, [])]
-                proto_excludes = [self.resolve_tag(k, True) for k in reduce(add, yaml_excludes, [])]
+                proto_includes = [self.resolve_tag(k, True) for k in pydash.uniq(pydash.flatten_deep(yaml_includes))]
+                proto_excludes = [self.resolve_tag(k, True) for k in pydash.uniq(pydash.flatten_deep(yaml_excludes))]
 
                 self.excludes = [k.preferred_name for k in proto_excludes if k is not None]
                 self.includes = [k.preferred_name for k in proto_includes if k is not None]
+
+                for excluded in proto_excludes:
+                    if excluded in proto_includes and excluded is not None:
+                        print(f'Warning: tag "{excluded.preferred_name}" is both included and excluded in "{self.filename}"')
 
                 progress.succeed('Selector tags verified')
         except Exception as e:
