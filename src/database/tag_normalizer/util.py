@@ -15,3 +15,5 @@ def load_normalizer_from_database(db: Database):
         tag_normalizer.add_database_tag(tag_entity, TagVersion.V2)
 
     progress.succeed(f'{progress.count} tags loaded')
+    return tag_normalizer
+

@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from database.entities.tag import TagProtoEntity
+from database.entities.tag import TagProtoEntity, AliasEntity
 from database.utils.enums import Source, Category
 from database.entities.post import PostEntity
-from database.translator.translator import PostTranslator, TagTranslator
+from database.translator.translator import PostTranslator, TagTranslator, AliasTranslator
 
 e621_categories = {
     0: Category.GENERAL,
@@ -25,7 +25,8 @@ class E621TagTranslator(TagTranslator):
             origin_name=data['name'],
             reference_name=data['name'],
             post_count=data['post_count'],
-            category=self.get_category(data['category'])
+            category=self.get_category(data['category']),
+            aliases=self.find_aliases(data['name'])
         )
 
     def get_category(self, e621_category: int) -> Category:
@@ -80,3 +81,13 @@ class E621PostTranslator(PostTranslator):
         p.timestamp = datetime.now()
 
         return p
+
+
+class E621AliasTranslator(AliasTranslator):
+    def translate(self, data: dict) -> AliasEntity:
+        return AliasEntity(
+            source=Source.E621,
+            source_id=str(data['id']),
+            tag_name=data['consequent_name'],
+            alias_name=data['antecedent_name']
+        )

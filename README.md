@@ -126,15 +126,17 @@ By default, the build script prunes all tags that have fewer than 100 samples. T
 
 The build script will also prune all images that have fewer than 10 tags. To adjust this limit, use `--min-tags-per-post LIMIT`.
 
+Adding a percentage at the end of a `--source` tells the build script to pick that many samples of the total dataset from the given source, e.g. `--source ./my.jsonl:50%`.
+
 ```bash
 dr-build \
-  --source '/tmp/curated.jsonl:30%' \        # 30% of the dataset will be curated samples
-  --source '/tmp/positive.jsonl:40%' \       # 40% of the dataset will be positive samples
-  --source '/tmp/negative.jsonl:20%' \       # etc.
+  --source '/tmp/curated.jsonl:30%' \
+  --source '/tmp/positive.jsonl:40%' \
+  --source '/tmp/negative.jsonl:20%' \
   --source '/tmp/uncurated.jsonl:10%' \
   --output /tmp/my-dataset \
-  --upload-to-hf username/dataset-name \     # optional
-  --upload-to-s3 s3://some-bucket/some/path  # optional
+  --upload-to-hf username/dataset-name \
+  --upload-to-s3 s3://some-bucket/some/path
 ```
 
 ### 6. Train a Model

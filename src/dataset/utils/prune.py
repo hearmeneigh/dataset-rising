@@ -3,7 +3,7 @@ from typing import List, Dict
 from database.entities.post import PostEntity
 
 
-def prune_and_filter_tags(posts: List[PostEntity], prefilters: Dict[str], min_posts_per_tag: int):
+def prune_and_filter_tags(posts: List[PostEntity], prefilters: Dict[str, bool], min_posts_per_tag: int):
     tag_counts = {}
 
     for post in posts:

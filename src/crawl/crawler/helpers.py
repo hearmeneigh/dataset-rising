@@ -34,6 +34,17 @@ def get_e926_tag_crawler(output_file: str):
     )
 
 
+def get_e926_tag_aliases_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e926.net/tag_aliases.json?limit=320&search[order]=date',
+        page_type='by_id',
+        page_field='page',
+        page_field_prefix='b',
+        json_field=None
+    )
+
+
 def get_e926_implications_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
@@ -67,6 +78,17 @@ def get_e621_tag_crawler(output_file: str):
     return Crawler(
         output_file=output_file,
         base_url='https://e621.net/tags.json?limit=320&search[order]=date',
+        page_type='by_id',
+        page_field='page',
+        page_field_prefix='b',
+        json_field=None
+    )
+
+
+def get_e621_tag_aliases_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://e621.net/tag_aliases.json?limit=320&search[order]=date',
         page_type='by_id',
         page_field='page',
         page_field_prefix='b',
@@ -155,6 +177,8 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
             return get_e926_tag_crawler(output_file)
         elif type == 'implications':
             return get_e926_implications_crawler(output_file)
+        elif type == 'aliases':
+            return get_e621_aliases_crawler(output_file)
     elif source == 'e621':
         if type == 'posts':
             return get_e621_index_crawler(output_file)
@@ -164,6 +188,8 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
             return get_e621_tag_crawler(output_file)
         elif type == 'implications':
             return get_e621_implications_crawler(output_file)
+        elif type == 'aliases':
+            return get_e621_aliases_crawler(output_file)
     elif source == 'gelbooru':
         if type == 'posts':
             return get_gelbooru_index_crawler(output_file)

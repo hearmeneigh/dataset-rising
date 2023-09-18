@@ -16,11 +16,12 @@ from typing import Optional, TextIO
 
 from pymongo.errors import DuplicateKeyError
 
+from database.importer.alias_importer import AliasImporter
 from database.translator.translator import TagTranslator
 from database.entities.tag import TagProtoEntity
 from database.importer.importer import Importer
 from database.tag_normalizer.tag_normalizer import TagNormalizer
-from database.translator.helpers import get_post_translator, get_tag_translator
+from database.translator.helpers import get_post_translator, get_tag_translator, get_alias_translator
 from database.utils.db_utils import connect_to_db
 from utils.load_yaml import load_yaml
 from utils.progress import Progress
@@ -30,8 +31,9 @@ def get_args():
     parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, and danbooru')
 
     parser.add_argument('-p', '--posts', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
-    parser.add_argument('-t', '--tags', metavar='FILE', type=str, help='Tag JSON file(s)', required=True, action='append')
+    parser.add_argument('-t', '--tags', metavar='FILE', type=str, help='Tag JSONL file(s)', required=True, action='append')
     parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Data source [e926, e621, gelbooru, danbooru]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
+    parser.add_argument('-a', '--aliases', metavar='FILE', type=str, help='Tag alias JSONL file(s)', required=False, default=None)
     parser.add_argument('--tag-version', metavar='VERSION', type=str, help='Preferred tag format version [v0, v1, v2]', required=False, default='v2', choices=['v0', 'v1', 'v2'])
     parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/tag_normalizer/prefilter.yaml')
     parser.add_argument('--rewrites', metavar='FILE', type=str, help='Rewritten tags YAML file', required=False, default='../examples/tag_normalizer/rewrites.yaml')
@@ -78,8 +80,22 @@ def main():
 
         progress.succeed('Database cleaned')
 
+    # process tag aliases
+    aliases = None
+
+    if args.aliases is not None:
+        alias_translator = get_alias_translator(args.source)
+        alias_importer = AliasImporter(translator=alias_translator)
+        aliases = {}
+
+        for alias in alias_importer.load(args.aliases):
+            if alias.tag_name not in aliases:
+                aliases[alias.tag_name] = []
+
+            aliases[alias.tag_name].append(alias.alias_name)
+
     # process tags
-    tag_translator = get_tag_translator(args.source)
+    tag_translator = get_tag_translator(args.source, aliases=aliases)
     tag_normalizer = TagNormalizer(prefilter=prefilter, symbols=symbols, aspect_ratios=aspect_ratios, rewrites=rewrites, category_naming_order=category_weights)
 
     for tag_file in args.tags:

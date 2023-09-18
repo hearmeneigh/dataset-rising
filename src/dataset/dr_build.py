@@ -9,6 +9,9 @@ import random
 import json
 import os
 
+from database.tag_normalizer.util import load_normalizer_from_database
+from database.utils.db_utils import connect_to_db
+from database.utils.enums import numeric_categories
 from dataset.utils.balance import balance_selections
 from dataset.utils.format import format_posts_for_dataset
 from dataset.utils.prune import prune_and_filter_tags
@@ -16,18 +19,21 @@ from utils.progress import Progress
 from utils.load_yaml import load_yaml
 from dataset.utils.selection_source import SelectionSource
 
+
 def get_args():
     parser = argparse.ArgumentParser(prog='Build', description='Build an image dataset from JSONL file(s)')
-    parser.add_argument('-s', '--source', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
+    parser.add_argument('-o', '--output', metavar='PATH', type=str, action='append', help='Path where the dataset will be stored', required=True)
+    parser.add_argument('-s', '--samples', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
-    parser.add_argument('-e', '--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
+    parser.add_argument('--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
+    parser.add_argument('--export-autocomplete', metavar='FILE', type=str, help='Export autocomplete hints as a a1111-sd-webui-tagcomplete CSV file', required=False, default=None)
     parser.add_argument('--min-posts-per-tag', metavar='COUNT', type=int, help='Minimum number of posts a tag must appear in to be included', required=False, default=100)
     parser.add_argument('--min-tags-per-post', metavar='COUNT', type=int, help='Minimum number of tags in a post for the post to be included (counted after min-posts-per-tag limit has been applied)', required=False, default=10)
     parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/dataset/prefilter.yaml')
     parser.add_argument('--image-width', metavar='PIXELS', type=int, help='Maximum width for stored images', required=False, default=4096)
     parser.add_argument('--image-height', metavar='PIXELS', type=int, help='Maximum height for stored images', required=False, default=4096)
-    parser.add_argument('--image_format', metavar='FORMAT', type=str, help='Storage image format [jpg, png]', choices=['jpg', 'png'], required=False, default='jpg')
-    parser.add_argument('--image_quality', metavar='PERCENTAGE', type=str, help='Storage image quality (JPEG only)', required=False, default=85)
+    parser.add_argument('--image-format', metavar='FORMAT', type=str, help='Storage image format [jpg, png]', choices=['jpg', 'png'], required=False, default='jpg')
+    parser.add_argument('--image-quality', metavar='PERCENTAGE', type=str, help='Storage image quality (JPEG only)', required=False, default=85)
     parser.add_argument('--num-proc', metavar='COUNT', type=int, help='Maximum number of parallel processes', required=False, default=1)
     parser.add_argument('--upload-to-hf', metavar='USER_NAME/DATASET_NAME', type=int, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
     parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)
@@ -48,14 +54,14 @@ def main():
     args = get_args()
 
     prefilters = {key: True for key in load_yaml(args.prefilter).get('tags', [])}
-    selections = [SelectionSource(source) for source in args.source]
+    selections = [SelectionSource(samples) for samples in args.samples]
 
     # remove duplicates
-    for (selection, index) in selections:
+    for (index, selection) in enumerate(selections):
         if index > 0:
             before_sels = selections[0:index-1]
             before_posts = [post for sel in before_sels for post in sel.posts]
-            selection.posts = set(selection).intersection(before_posts)
+            selection.posts = list(set(selection.posts).difference(before_posts))
 
     # balance selections
     balance_selections(selections)
@@ -73,17 +79,42 @@ def main():
 
     # remove excess tags from posts
     for post in posts:
-        posts.tags = [tag for tag in post.tags if tag_counts.get(tag, 0) >= args.min_posts_per_tag]
+        post.tags = [tag for tag in post.tags if tag_counts.get(tag, 0) >= args.min_posts_per_tag]
 
     # remove posts that have too few tags
     posts = [post for post in posts if len(post.tags) >= args.min_tags_per_post]
 
     # save tags
     if args.export_tags is not None:
+        os.makedirs(os.path.dirname(args.export_tags), exist_ok=True)
+
         with open(args.export_tags, 'w') as fp:
             tag_dict = {tag_name: tag_count for tag_count, tag_name in tag_counts.items() if tag_count >= args.min_posts_per_tag}
             json.dump(tag_dict, fp, indent=2)
 
+    # save autocomplete
+    if args.export_autocomplete is not None:
+        os.makedirs(os.path.dirname(args.export_autocomplete), exist_ok=True)
+        (db, client) = connect_to_db()
+
+        # process tags
+        tag_normalizer = load_normalizer_from_database(db)
+
+        with open(args.export_autocomplete, 'w') as csv_file:
+            for (tag_count, tag_name) in tag_counts.items():
+                tag = tag_normalizer.get(tag_name)
+
+                if tag is None:
+                    print('Unexpected tag not found in database: "{tag_name}"')
+                    continue
+
+                known_aliases = [t for t in [tag.v1_name, tag.v2_name, tag.v2_short, tag.origin_name] if t != tag.preferred_name]
+
+                for alias in tag.aliases:
+                    if alias != tag.preferred_name and alias.strip() != '':
+                        known_aliases.append(alias)
+
+                csv_file.write(f"{tag.preferred_name},{numeric_categories.get(tag.category, 0)},{tag_count},\"{','.join(set(known_aliases))}\"\n")
 
     # shuffle posts
     random.shuffle(posts)
@@ -99,7 +130,7 @@ def main():
           "tags": datasets.Sequence(datasets.Value(dtype='string', id=None)),
           "url": datasets.Value(dtype='string', id=None),
           "text": datasets.Value(dtype='string', id=None),
-          "desc": datasets.Value(dtype='string', id=None)
+          "desc": datasets.Value(dtype='string', id=None),
         }
       ),
       num_proc=args.num_proc,

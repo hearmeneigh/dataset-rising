@@ -22,7 +22,7 @@ def main():
 
     # process tags
     tag_normalizer = load_normalizer_from_database(db)
-    tag_translator = get_tag_translator(args.source)
+    # tag_translator = get_tag_translator(args.source, aliases={})
 
     # process posts
     post_translator = get_post_translator(args.source, tag_normalizer)

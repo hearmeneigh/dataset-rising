@@ -6,7 +6,7 @@ from anyascii import anyascii
 
 from database.entities.post import PostEntity
 from database.utils.enums import Category, Source, Rating
-from database.entities.tag import TagEntity, TagProtoEntity, TagAlias, TagVersion
+from database.entities.tag import TagEntity, TagProtoEntity, TagRef, TagVersion
 from utils.progress import Progress
 
 scoreAboveMilestones = [250, 500, 1000, 1500, 2000]
@@ -23,8 +23,8 @@ long_name_categories = [Category.SYMBOL, Category.ASPECT_RATIO, Category.SCORE, 
 # Any TagEntity added to TagNormalizer will have its
 # tag names normalized and overwritten.
 class TagNormalizer:
-    # alias name => { id, versions, count, tag }
-    alias_map: Dict[str, TagAlias] = {}
+    # ref name => { id, versions, count, tag }
+    ref_map: Dict[str, TagRef] = {}
 
     # tag id => TagEntity
     id_map: Dict[str, TagEntity] = {}
@@ -131,7 +131,7 @@ class TagNormalizer:
         self.id_map[self.get_unique_tag_id(tag)] = tag
         self.original_map[tag.reference_name] = tag
 
-        self.alias_map[tag.preferred_name] = TagAlias(
+        self.ref_map[tag.preferred_name] = TagRef(
             id=self.get_unique_tag_id(tag),
             category=tag.category,
             versions=[version],
@@ -139,14 +139,14 @@ class TagNormalizer:
             count=tag.post_count
         )
 
-    def add_tag(self, tag_alias: str, proto_tag: TagProtoEntity, version: TagVersion):
+    def add_tag(self, tag_ref: str, proto_tag: TagProtoEntity, version: TagVersion):
         try:
-            tag_alias = self.clean(tag_alias)
+            tag_ref = self.clean(tag_ref)
             tag = self.register_tag_reference(proto_tag)
             tag_id = self.get_unique_tag_id(proto_tag)
 
-            if tag_alias not in self.alias_map:
-                self.alias_map[tag_alias] = TagAlias(
+            if tag_ref not in self.ref_map:
+                self.ref_map[tag_ref] = TagRef(
                     id=self.get_unique_tag_id(tag),
                     category=proto_tag.category,
                     versions=[version],
@@ -155,22 +155,22 @@ class TagNormalizer:
                     proto_tag=proto_tag
                 )
 
-            alias_record = self.alias_map[tag_alias]
+            ref_record = self.ref_map[tag_ref]
 
-            if alias_record.id != tag_id:
+            if ref_record.id != tag_id:
                 # prefer short versions of tags in lower categories (e.g. prefer GENERAL to ARTIST)
-                if self.get_category_naming_order(tag.category) < self.get_category_naming_order(alias_record.category):
-                    if TagVersion.V0 not in alias_record.versions:
-                        # print(f'Lookup replacement: {tag_alias} -- ID {alias_record.id} => {tag_id}, category {alias_record.category.value} => {tag.category.value}')
-                        self.alias_map[tag_alias] = TagAlias(id=tag_id, category=tag.category, versions=[version], tag=tag, count=tag.post_count)
+                if self.get_category_naming_order(tag.category) < self.get_category_naming_order(ref_record.category):
+                    if TagVersion.V0 not in ref_record.versions:
+                        # print(f'Lookup replacement: {tag_ref} -- ID {ref_record.id} => {tag_id}, category {ref_record.category.value} => {tag.category.value}')
+                        self.ref_map[tag_ref] = TagRef(id=tag_id, category=tag.category, versions=[version], tag=tag, count=tag.post_count)
                     else:
-                        # print(f'V0 overrides: {tag_alias}')
+                        # print(f'V0 overrides: {tag_ref}')
                         pass
             else:
-                if version not in alias_record.versions:
-                    alias_record.versions.append(version)
+                if version not in ref_record.versions:
+                    ref_record.versions.append(version)
         except Exception as e:
-            print(f'Loading tag {tag_alias} failed: {str(e)} -- {str(proto_tag)}')
+            print(f'Loading tag {tag_ref} failed: {str(e)} -- {str(proto_tag)}')
             raise
 
     def register_tag_reference(self, tag: TagProtoEntity) -> TagEntity:
@@ -198,6 +198,8 @@ class TagNormalizer:
         t.preferred_name = t.v2_name
         t.reference_name = tag.reference_name
         t.post_count = tag.post_count
+        t.aliases = tag.aliases
+
         t.timestamp = datetime.now()
 
         if t.v1_name == '' or t.v2_name == '' or t.v2_short == '' or t.preferred_name == '':
@@ -276,14 +278,14 @@ class TagNormalizer:
             elif tag_version_format == TagVersion.V1:
                 tag.preferred_name = v1_name
             else:
-                if v2_name_short in self.alias_map and self.alias_map[v2_name_short].tag is tag:
+                if v2_name_short in self.ref_map and self.ref_map[v2_name_short].tag is tag:
                     tag.preferred_name = v2_name_short
 
-                if v2_name_long not in self.alias_map:
+                if v2_name_long not in self.ref_map:
                     raise KeyError(v2_name_long)
 
-                if self.alias_map[v2_name_long].tag is not tag:
-                    old_tag = self.alias_map[v2_name_long].tag
+                if self.ref_map[v2_name_long].tag is not tag:
+                    old_tag = self.ref_map[v2_name_long].tag
                     old_v2_name_long = self.to_v2_tag(old_tag)
 
                     if old_v2_name_long == v2_name_long:
@@ -297,14 +299,14 @@ class TagNormalizer:
 
                             self.id_map.pop(self.get_unique_tag_id(removed_tag))
 
-                            for alias in [removed_tag.v1_name, removed_tag.v2_name, removed_tag.v2_short, removed_tag.origin_name]:
-                                if alias in self.alias_map and self.alias_map[alias].tag == removed_tag:
-                                    old_alias = self.alias_map[alias]
+                            for ref in [removed_tag.v1_name, removed_tag.v2_name, removed_tag.v2_short, removed_tag.origin_name]:
+                                if ref in self.ref_map and self.ref_map[ref].tag == removed_tag:
+                                    old_ref = self.ref_map[ref]
 
-                                    self.alias_map[alias] = TagAlias(
+                                    self.ref_map[ref] = TagRef(
                                         id=self.get_unique_tag_id(preserved_tag),
                                         category=preserved_tag.category,
-                                        versions=old_alias.versions,
+                                        versions=old_ref.versions,
                                         tag=preserved_tag,
                                         count=preserved_tag.post_count
                                     )
@@ -318,11 +320,11 @@ class TagNormalizer:
                     else:
                         pass
 
-                    if self.alias_map[old_v2_name_long].tag is not old_tag:
+                    if self.ref_map[old_v2_name_long].tag is not old_tag:
                         if old_tag.post_count >= significant_tag_post_count_threshold:
                             raise ValueError(v2_name_long)
 
-                    self.alias_map[v2_name_long] = TagAlias(
+                    self.ref_map[v2_name_long] = TagRef(
                         id=self.get_unique_tag_id(tag),
                         category=tag.category,
                         versions=[TagVersion.V2],
@@ -342,8 +344,8 @@ class TagNormalizer:
         for tag in self.id_map.values():
             v2_name_short = self.to_v2_tag(tag, short=True)
 
-            if v2_name_short not in self.alias_map:
-                self.alias_map[v2_name_short] = TagAlias(
+            if v2_name_short not in self.ref_map:
+                self.ref_map[v2_name_short] = TagRef(
                     id=self.get_unique_tag_id(tag),
                     category=tag.category,
                     versions=[TagVersion.V2],
@@ -355,15 +357,15 @@ class TagNormalizer:
                 tag.v2_short = v2_name_short
                 print(f'Preferring "{tag.v2_short}" for "{tag.origin_name}" ({tag.category})')
 
-            elif self.alias_map[v2_name_short].tag is not tag:
-                old_tag = self.alias_map[v2_name_short].tag
+            elif self.ref_map[v2_name_short].tag is not tag:
+                old_tag = self.ref_map[v2_name_short].tag
 
                 if old_tag.v2_name == v2_name_short:
                     continue
 
                 if self.category_naming_order[tag.category] < self.category_naming_order[old_tag.category]:
-                    if old_tag.v2_name not in self.alias_map or self.alias_map[old_tag.v2_name] is not old_tag:
-                        self.alias_map[old_tag.v2_name] = TagAlias(
+                    if old_tag.v2_name not in self.ref_map or self.ref_map[old_tag.v2_name] is not old_tag:
+                        self.ref_map[old_tag.v2_name] = TagRef(
                             id=self.get_unique_tag_id(old_tag),
                             category=old_tag.category,
                             versions=[TagVersion.V2],
@@ -373,7 +375,7 @@ class TagNormalizer:
                         old_tag.preferred_name = old_tag.v2_name
                         print(f'Switching "{old_tag.origin_name}" ({old_tag.category}) to "{old_tag.preferred_name}"')
 
-                    self.alias_map[v2_name_short] = TagAlias(
+                    self.ref_map[v2_name_short] = TagRef(
                         id=self.get_unique_tag_id(tag),
                         category=tag.category,
                         versions=[TagVersion.V2],
@@ -384,7 +386,7 @@ class TagNormalizer:
                     tag.preferred_name = v2_name_short
                     tag.v2_short = v2_name_short
                     print(f'Preferring "{tag.v2_short}" for "{tag.origin_name}" ({tag.category})')
-            elif self.alias_map[v2_name_short].tag is tag:
+            elif self.ref_map[v2_name_short].tag is tag:
                 tag.preferred_name = v2_name_short
 
     def get_special_naming_convention(self, tag: Union[TagProtoEntity, TagEntity]) -> Optional[str]:
@@ -421,12 +423,12 @@ class TagNormalizer:
         return self.original_map.get(tag_name, None)
 
     def get(self, tag_name: str) -> Optional[TagEntity]:
-        alias = self.alias_map.get(tag_name, None)
+        ref = self.ref_map.get(tag_name, None)
 
-        if alias is None:
+        if ref is None:
             return None
 
-        return alias.tag
+        return ref.tag
 
     def get_pseudo_tags(self, post: PostEntity) -> List[str]:
         score = post.score

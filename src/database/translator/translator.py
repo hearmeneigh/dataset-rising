@@ -1,4 +1,4 @@
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 
 from database.entities.implication import ImplicationEntity
 from database.entities.post import PostEntity
@@ -33,10 +33,21 @@ class PostTranslator(Translator):
 
 
 class TagTranslator(Translator):
+    def __init__(self, aliases: Optional[Dict[str, List[str]]]):
+        self.aliases = aliases or {}
+
+    def find_aliases(self, tag_name: str) -> Optional[List[str]]:
+        return self.aliases.get(tag_name)
+
     def translate(self, data: dict) -> TagProtoEntity:
         raise NotImplementedError()
 
 
 class ImplicationTranslator(Translator):
     def translate(self, data: dict) -> ImplicationEntity:
+        raise NotImplementedError()
+
+
+class AliasTranslator(Translator):
+    def translate(self, data: dict) -> AliasEntity:
         raise NotImplementedError()

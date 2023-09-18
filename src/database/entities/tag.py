@@ -18,14 +18,16 @@ class TagProtoEntity:
     category: Category
     post_count: Optional[int]
     renamed: bool = False
+    aliases: Optional[List[str]]
 
-    def __init__(self, source: Source, source_id: str, origin_name: str, reference_name: str, category: Category, post_count: Optional[int]):
+    def __init__(self, source: Source, source_id: str, origin_name: str, reference_name: str, category: Category, post_count: Optional[int], aliases: Optional[List[str]]):
         self.source = source
         self.source_id = source_id
         self.origin_name = origin_name
         self.reference_name = reference_name
         self.category = category
         self.post_count = post_count
+        self.aliases = aliases
 
 
 class TagEntity:
@@ -52,6 +54,8 @@ class TagEntity:
 
     post_count: Optional[int]
 
+    aliases: Optional[List[str]]
+
     timestamp: datetime
 
 
@@ -61,7 +65,21 @@ class TagVersion(Enum):
     V2 = 'v2'
 
 
-class TagAlias:
+class AliasEntity:
+    tag_name: str
+    alias_name: str
+    source: Source
+    source_id: str
+
+    def __init__(self, source: Source, source_id: str, tag_name: str, alias_name: str):
+        self.source = source
+        self.source_id = source_id
+        self.tag_name = tag_name
+        self.alias_name = alias_name
+
+
+
+class TagRef:
     def __init__(self, id: str, category: Category, versions: List[TagVersion], tag: TagEntity, count: Optional[int], proto_tag: Optional[TagProtoEntity] = None):
         self.id = id
         self.category = category
