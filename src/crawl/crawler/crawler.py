@@ -63,6 +63,7 @@ class Crawler:
 
         while result is not None:
             result = self.fetch(agent)
+            prev_id = self.next_id
 
             if result is not None:
                 records = result.get(self.json_field, []) if self.json_field is not None else result
@@ -77,6 +78,9 @@ class Crawler:
 
             self.cur_index += 1
             self.save_position()
+
+            if self.next_id == prev_id:
+                break
 
         self.fp.close()
         print(f'Crawled {self.cur_index} page(s) and found {self.record_count} record(s)')

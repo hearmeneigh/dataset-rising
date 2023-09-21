@@ -178,7 +178,7 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
         elif type == 'implications':
             return get_e926_implications_crawler(output_file)
         elif type == 'aliases':
-            return get_e621_aliases_crawler(output_file)
+            return get_e621_tag_aliases_crawler(output_file)
     elif source == 'e621':
         if type == 'posts':
             return get_e621_index_crawler(output_file)
@@ -189,7 +189,7 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
         elif type == 'implications':
             return get_e621_implications_crawler(output_file)
         elif type == 'aliases':
-            return get_e621_aliases_crawler(output_file)
+            return get_e621_tag_aliases_crawler(output_file)
     elif source == 'gelbooru':
         if type == 'posts':
             return get_gelbooru_index_crawler(output_file)
