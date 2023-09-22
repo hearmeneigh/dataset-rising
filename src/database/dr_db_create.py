@@ -1,9 +1,10 @@
+from pymongo import MongoClient
+from pymongo.database import Database
+
 from database.utils.db_utils import connect_to_db
 
 
-def main():
-    (db, client) = connect_to_db()
-
+def reset_database(db: Database, client: MongoClient):
     db_name = db.name
 
     client.drop_database(db_name)
@@ -37,6 +38,11 @@ def main():
     translations.create_index(['source_id', 'source'], unique=True)
     translations.create_index(['origin_name', 'source'], unique=True)
     translations.create_index(['e621_name'], unique=True)
+
+
+def main():
+    (db, client) = connect_to_db()
+    reset_database(db, client)
 
 
 if __name__ == "__main__":

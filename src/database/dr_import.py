@@ -16,6 +16,7 @@ from typing import Optional, TextIO
 
 from pymongo.errors import DuplicateKeyError
 
+from database.dr_db_create import reset_database
 from database.importer.alias_importer import AliasImporter
 from database.translator.translator import TagTranslator
 from database.entities.tag import TagProtoEntity
@@ -73,11 +74,7 @@ def main():
     # clean database?
     if args.remove_old:
         progress = Progress('Cleaning database', 'collections')
-
-        for collection in ['posts', 'tags', 'implications']:
-            progress.update()
-            db[collection].delete_many({})
-
+        reset_database(db, client)
         progress.succeed('Database cleaned')
 
     # process tag aliases

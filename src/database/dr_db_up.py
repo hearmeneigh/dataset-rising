@@ -6,7 +6,7 @@ def main():
     password = os.environ.get('DB_PASSWORD', 'root')
     port = int(os.environ.get('DB_PORT', '27017'))
 
-    cmd = f'docker start e621-rising-mongo || docker run --name e621-rising-mongo --restart always -e "MONGO_INITDB_ROOT_USERNAME={username}" -e "MONGO_INITDB_ROOT_PASSWORD={password}" -p "{port}:{port}" -d mongo:6'
+    cmd = f'docker start dataset-rising-mongo || docker run --name dataset-rising-mongo --restart always -e "MONGO_INITDB_ROOT_USERNAME={username}" -e "MONGO_INITDB_ROOT_PASSWORD={password}" -p "{port}:{port}" -d mongo:6'
     print(f"Running '{cmd}'...".replace(password, '******'))
 
     subprocess.run(

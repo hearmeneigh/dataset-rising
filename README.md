@@ -31,9 +31,6 @@ pip3 install DatasetRising
 
 # start MongoDB database; use `dr-db-down` to stop
 dr-db-up
-
-# create database in MongoDB
-dr-db-create
 ```
 
 ### 1. Download Metadata (Posts, Tags, ...)

@@ -478,7 +478,8 @@ class TagNormalizer:
                 category=Category.SCORE,
                 source=Source.RISING,
                 source_id=f'score_above_{threshold}',
-                post_count=0
+                post_count=0,
+                aliases=[]
             ), TagVersion.V2)
 
         for threshold in scoreBelowMilestones:
@@ -488,7 +489,8 @@ class TagNormalizer:
                 category=Category.SCORE,
                 source=Source.RISING,
                 source_id=f'score_below_{threshold}',
-                post_count=0
+                post_count=0,
+                aliases=[]
             ), TagVersion.V2)
 
         for threshold in favAboveMilestones:
@@ -498,7 +500,8 @@ class TagNormalizer:
                 category=Category.FAVORITES,
                 source=Source.RISING,
                 source_id=f'favorites_above_{threshold}',
-                post_count=0
+                post_count=0,
+                aliases=[]
             ), TagVersion.V2)
 
         for threshold in favBelowMilestones:
@@ -508,7 +511,8 @@ class TagNormalizer:
                 category=Category.FAVORITES,
                 source=Source.RISING,
                 source_id=f'favorites_below_{threshold}',
-                post_count=0
+                post_count=0,
+                aliases = []
             ), TagVersion.V2)
 
         for rating in ratingMilestones:
@@ -527,7 +531,8 @@ class TagNormalizer:
                 category=Category.RATING,
                 source=Source.RISING,
                 source_id=f'rating_{rating_str}',
-                post_count=0
+                post_count=0,
+                aliases=[]
             ), TagVersion.V2)
 
         for rising_type in ['masterpiece', 'unpopular']:
@@ -537,5 +542,6 @@ class TagNormalizer:
                 category=Category.RISING,
                 source=Source.RISING,
                 source_id=f'rising_{rising_type}',
-                post_count=0
+                post_count=0,
+                aliases=[]
             ), TagVersion.V2)

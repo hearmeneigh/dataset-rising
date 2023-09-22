@@ -2,7 +2,7 @@ from typing import Union, List, Optional, Dict
 
 from database.entities.implication import ImplicationEntity
 from database.entities.post import PostEntity
-from database.entities.tag import TagEntity, TagProtoEntity
+from database.entities.tag import TagEntity, TagProtoEntity, AliasEntity
 from database.tag_normalizer.tag_normalizer import TagNormalizer
 
 
@@ -39,7 +39,7 @@ class TagTranslator(Translator):
     def find_aliases(self, tag_name: str) -> Optional[List[str]]:
         return self.aliases.get(tag_name)
 
-    def translate(self, data: dict) -> TagProtoEntity:
+    def translate(self, data: dict) -> Optional[TagProtoEntity]:
         raise NotImplementedError()
 
 

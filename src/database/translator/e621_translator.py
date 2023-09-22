@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from database.entities.tag import TagProtoEntity, AliasEntity
 from database.utils.enums import Source, Category
@@ -18,7 +19,7 @@ e621_categories = {
 
 
 class E621TagTranslator(TagTranslator):
-    def translate(self, data: dict) -> TagProtoEntity:
+    def translate(self, data: dict) -> Optional[TagProtoEntity]:
         return TagProtoEntity(
             source=Source.E621,
             source_id=str(data['id']),
