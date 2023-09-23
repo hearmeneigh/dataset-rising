@@ -8,7 +8,9 @@ def reset_database(db: Database, client: MongoClient):
     db_name = db.name
 
     client.drop_database(db_name)
-    db = client[db_name]
+    client.drop_database(db_name)  # twice
+
+    db = client.get_database(db_name)
 
     posts = db.create_collection('posts')
     posts.create_index(['source_id', 'source'], unique=True)
