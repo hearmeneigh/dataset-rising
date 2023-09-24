@@ -11,5 +11,5 @@ def connect_to_db(
 ):
     client = MongoClient(f'mongodb://{username}:{password}@{host}:{port}')
     db = client[db_name]
-    return db, client
 
+    return db, client

@@ -1,3 +1,4 @@
+import time
 from pymongo import MongoClient
 from pymongo.database import Database
 
@@ -9,6 +10,9 @@ def reset_database(db: Database, client: MongoClient):
 
     client.drop_database(db_name)
     client.drop_database(db_name)  # twice
+
+    time.sleep(2)
+    client.drop_database(db_name)  # thrice
 
     db = client.get_database(db_name)
 
