@@ -317,13 +317,13 @@ python3 -m twine upload dist/*
 ### Architecture
 ```mermaid
 flowchart TD
-    CRAWL[Crawl/Download posts and tags] -- JSONL --> IMPORT
-    IMPORT[Import posts and tags] -- JSONL --> STORE
-    APPEND[Append posts] -- JSONL --> STORE
+    CRAWL[Crawl/Download posts, tags, and tag aliases] -- JSONL --> IMPORT
+    IMPORT[Import posts, tags, and tag aliases] -- JSONL --> STORE
+    APPEND[Append additional posts] -- JSONL --> STORE
     STORE[Database] --> PREVIEW
-    STORE --> PICK
+    STORE --> SELECT
     PREVIEW[Preview selectors] --> HTML(HTML)
-    PICK[Select samples] -- JSONL --> BUILD
+    SELECT[Select samples] -- JSONL --> BUILD
     BUILD[Build dataset] -- HF Dataset/Parquet --> TRAIN
-    TRAIN[Train model]
+    TRAIN[Train model] --> MODEL[Model]
 ```
