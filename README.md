@@ -220,10 +220,6 @@ dr-db-uninstall
 
 ## Advanced Topics
 
-### Generating WebUI Tag Autocomplete Guides
-TBD
-
-
 ### Resetting the Database
 To reset the database, run the following commands.
 
@@ -239,13 +235,11 @@ The `append` script allows you to import posts from additional sources.
 Use `import` to import the first source and define the tag namespace, then use `append` to import additional sources.
 
 ```bash
-cd <dataset-rising>/database
-
 # main sources and tags
-python3 dr_import.py ...
+dr-import ...
 
 # additional sources
-python3 dr_append.py --input /tmp/gelbooru-posts.jsonl --source gelbooru
+dr-append --input /tmp/gelbooru-posts.jsonl --source gelbooru
 ```
 
 ### Multi-GPU Training
@@ -318,8 +312,8 @@ python3 -m twine upload dist/*
 ```mermaid
 flowchart TD
     CRAWL[Crawl/Download posts, tags, and tag aliases] -- JSONL --> IMPORT
-    IMPORT[Import posts, tags, and tag aliases] -- JSONL --> STORE
-    APPEND[Append additional posts] -- JSONL --> STORE
+    IMPORT[Import posts, tags, and tag aliases] --> STORE
+    APPEND[Append additional posts] --> STORE
     STORE[Database] --> PREVIEW
     STORE --> SELECT
     PREVIEW[Preview selectors] --> HTML(HTML)

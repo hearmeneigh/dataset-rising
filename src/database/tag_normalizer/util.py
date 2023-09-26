@@ -9,7 +9,7 @@ def load_normalizer_from_database(db: Database):
     progress = Progress('Loading tags', 'tags')
     tag_normalizer = TagNormalizer()
 
-    for tag in db['tags'].find({}):
+    for tag in db['tags'].find(filter={}):
         progress.update()
         tag_entity = TagEntity(tag)
         tag_normalizer.add_database_tag(tag_entity, TagVersion.V2)

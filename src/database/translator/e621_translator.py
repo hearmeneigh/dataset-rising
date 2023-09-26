@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+import json
 
 from database.entities.tag import TagProtoEntity, AliasEntity
 from database.utils.enums import Source, Category
@@ -37,8 +38,13 @@ class E621TagTranslator(TagTranslator):
 class E621PostTranslator(PostTranslator):
     def translate(self, data: dict) -> PostEntity:
         file = data.get('file', {})
-        preview = data.get('../../../examples/preview', {})
-        sample = data.get('sample', {})
+
+        if file is None or file.get('url') is None:
+            raise Exception(f'Unexpected empty data in post: missing "file" or "file.url": {json.dumps(data)}')
+
+        sample = data.get('sample', file)
+        preview = data.get('preview', sample)
+
         score = int(data.get('score', {}).get('total', 0))
         favorites = int(data['fav_count'])
         comments = int(data['comment_count'])

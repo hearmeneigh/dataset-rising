@@ -1,12 +1,13 @@
 import os
 import pydash
-from typing import Dict, List, Union, Generator, Optional
+from typing import Dict, List, Union, Generator, Optional, Tuple
 from pymongo.database import Database
 import yaml
 from yamlinclude import YamlIncludeConstructor
 
 from database.entities.post import PostEntity
 from database.entities.tag import TagEntity
+from database.utils.source_url import get_tag_url
 from utils.progress import Progress
 
 YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader)
@@ -95,7 +96,7 @@ class Selector:
                 ]
             }
 
-        matches = list(coll.find(selector))
+        matches = list(coll.find(filter=selector))
 
         if len(matches) == 0:
             if with_warnings:
@@ -160,7 +161,7 @@ class Selector:
             except Exception as e:
                 print(f'Could not load post #{post.get("source_id")} ({post.get("source")}) – skipping: {str(e)}')
 
-    def get_samples_by_tag(self, tag_name: str, samples: int, formats: List[str]) -> List[PostEntity]:
+    def get_samples_by_tag(self, tag_name: str, samples: int, formats: List[str]) -> Tuple[List[PostEntity], Optional[int], Optional[str]]:
         progress = Progress(f'Sampling posts for "{tag_name}"', 'selectors')
         coll = self.db['posts']
 
@@ -181,10 +182,19 @@ class Selector:
 
         posts = [PostEntity(post) for post in results]
 
-        progress.succeed(f'Sampled {len(posts)} posts for "{tag_name}"')
-        return posts
+        tag_url = None
+        total_count = None
+        tag = self.db['tags'].find_one({'preferred_name': tag_name})
 
-    def sample_selectors(self, samples: int = 20, formats=None):
+        if tag is not None:
+            t = TagEntity(tag)
+            total_count = t.post_count
+            tag_url = get_tag_url(t)
+
+        progress.succeed(f'Sampled {len(posts)} posts for "{tag_name}"')
+        return posts, total_count, tag_url
+
+    def sample_selectors(self, samples: int = 20, formats=None) -> Dict[str, Dict[str, Tuple[List[PostEntity], Optional[int], Optional[str]]]]:
         if formats is None:
             formats = ['jpg', 'png']
 
