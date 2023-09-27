@@ -5,8 +5,8 @@ from pymongo.database import Database
 import yaml
 from yamlinclude import YamlIncludeConstructor
 
-from database.entities.post import PostEntity
 from database.entities.tag import TagEntity
+from database.selector.selected_sample import SelectedSample
 from database.utils.source_url import get_tag_url
 from utils.progress import Progress
 
@@ -113,7 +113,7 @@ class Selector:
         self.tag_map[tag.preferred_name] = tag
         return tag
 
-    def select(self, formats: List[str] = None, limit: int = None) -> Generator[PostEntity, None, None]:
+    def select(self, formats: List[str] = None, limit: int = None) -> Generator[SelectedSample, None, None]:
         if formats is None:
             formats = ['jpg', 'png']
 
@@ -127,7 +127,7 @@ class Selector:
                         '$nin': self.excludes
                     },
                     'origin_format': {'$in': formats},
-                    'image_url': {'$exists': True},
+                    'image_url': {'$exists': True, '$ne': None},
                 },
             },
             {
@@ -149,8 +149,9 @@ class Selector:
                 post_count += 1
 
                 post.pop('tmp_order')
+                matches = [t for t in self.includes if t in post['tags']]
 
-                p = PostEntity(post)
+                p = SelectedSample(matches=matches, post=post)
                 proto_tags = [self.resolve_tag(f'preferred:{tag}', True) for tag in p.tags]
                 p.tags = [k.preferred_name for k in proto_tags if k is not None]
 
@@ -161,16 +162,17 @@ class Selector:
             except Exception as e:
                 print(f'Could not load post #{post.get("source_id")} ({post.get("source")}) – skipping: {str(e)}')
 
-    def get_samples_by_tag(self, tag_name: str, samples: int, formats: List[str]) -> Tuple[List[PostEntity], Optional[int], Optional[str]]:
+    def get_samples_by_tag(self, tag_name: str, samples: int, formats: List[str], filters: List[str]) -> Tuple[List[SelectedSample], Optional[int], Optional[str]]:
         progress = Progress(f'Sampling posts for "{tag_name}"', 'selectors')
         coll = self.db['posts']
+        matchers = [tag_name] + filters
 
         results = coll.aggregate([
             {
                 '$match': {
-                    'tags': tag_name,
+                    'tags': {'$in': matchers},
                     'origin_format': {'$in': formats},
-                    'image_url': {'$exists': True},
+                    'image_url': {'$exists': True, '$ne': None},
                 }
             },
             {
@@ -180,7 +182,7 @@ class Selector:
             }
         ])
 
-        posts = [PostEntity(post) for post in results]
+        posts = [SelectedSample(matches=[t for t in matchers if t in post['tags']], post=post) for post in results]
 
         tag_url = None
         total_count = None
@@ -194,13 +196,16 @@ class Selector:
         progress.succeed(f'Sampled {len(posts)} posts for "{tag_name}"')
         return posts, total_count, tag_url
 
-    def sample_selectors(self, samples: int = 20, formats=None) -> Dict[str, Dict[str, Tuple[List[PostEntity], Optional[int], Optional[str]]]]:
+    def sample_selectors(self, samples: int = 20, formats: List[str] = None, filters: List[str] = None) -> Dict[str, Dict[str, Tuple[List[SelectedSample], Optional[int], Optional[str]]]]:
         if formats is None:
             formats = ['jpg', 'png']
 
+        if filters is None:
+            filters = []
+
         return {
-            'includes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats) for tag_name in self.includes},
-            'excludes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats) for tag_name in self.excludes}
+            'includes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats, filters) for tag_name in self.includes},
+            'excludes': {tag_name: self.get_samples_by_tag(tag_name, samples, formats, filters) for tag_name in self.excludes}
         }
 
     def test(self, tag_name: str) -> Optional[bool]:
@@ -211,3 +216,4 @@ class Selector:
             return True
 
         return None
+
