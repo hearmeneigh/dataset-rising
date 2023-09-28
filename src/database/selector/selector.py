@@ -85,14 +85,20 @@ class Selector:
             if tag_prefix == 'preferred' and tag_name in self.tag_map:
                 return self.tag_map[tag_name]
 
-            selector = {f'{tag_prefix}_name': tag_body}
+            selector = {
+                '$or': [
+                    {f'{tag_prefix}_name': tag_body},
+                    {'id_name': tag_body}
+                ]
+            }
         else:
             tag_name = tag_name
             selector = {
                 '$or': [
                     {'preferred_name': tag_name},
                     {'v2_name': tag_name},
-                    {'v1_name': tag_name}
+                    {'v1_name': tag_name},
+                    {'id_name': tag_name},
                 ]
             }
 
