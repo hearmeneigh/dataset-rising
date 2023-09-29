@@ -43,3 +43,5 @@ class PostEntity:
 
     created_at: Optional[datetime]
     timestamp: datetime
+
+    selector: Optional[str]

@@ -1,5 +1,6 @@
 import json
 import re
+import os
 from typing import List
 
 from database.entities.post import PostEntity
@@ -22,10 +23,14 @@ class SelectionSource:
 
     def load(self, filename: str) -> List[PostEntity]:
         posts = []
+        selector_name = os.path.splitext(os.path.basename(filename))[0]
 
         with open(filename, 'r') as fp:
             for line in fp:
-                posts.append(PostEntity(json.loads(line)))
+                p = PostEntity(json.loads(line))
+                p.selector = selector_name
+
+                posts.append(p)
 
         return posts
 

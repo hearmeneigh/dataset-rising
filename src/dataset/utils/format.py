@@ -45,7 +45,8 @@ def format_posts_for_dataset(posts: List[PostEntity], agent: str, image_width: i
             'tags': shuffled_tags,
             'url': post.image_url,
             'text': separator.join(shuffled_tags),
-            'desc': post.description
+            'desc': post.description,
+            'selector': post.selector
         }
 
         yield record

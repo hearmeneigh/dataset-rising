@@ -131,6 +131,7 @@ def main():
           "url": datasets.Value(dtype='string', id=None),
           "text": datasets.Value(dtype='string', id=None),
           "desc": datasets.Value(dtype='string', id=None),
+          "selector": datasets.Value(dtype='string', id=None),
         }
       ),
       num_proc=args.num_proc,
