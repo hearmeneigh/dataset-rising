@@ -36,6 +36,10 @@ class Importer:
                     continue
 
                 record = self.translator.translate(data)
+
+                if record is None:
+                    continue
+
                 record.tags.extend(self.tag_normalizer.get_pseudo_tags(record))
 
                 # remove duplicates

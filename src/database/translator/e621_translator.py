@@ -36,11 +36,11 @@ class E621TagTranslator(TagTranslator):
 
 
 class E621PostTranslator(PostTranslator):
-    def translate(self, data: dict) -> PostEntity:
+    def translate(self, data: dict) -> Optional[PostEntity]:
         file = data.get('file', {})
 
         if file is None or file.get('url') is None:
-            raise Exception(f'Unexpected empty data in post: missing "file" or "file.url": {json.dumps(data)}')
+            return None
 
         sample = data.get('sample', file)
         preview = data.get('preview', sample)

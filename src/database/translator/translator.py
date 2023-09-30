@@ -15,7 +15,7 @@ class PostTranslator(Translator):
     def __init__(self, tag_normalizer: TagNormalizer):
         self.tag_normalizer = tag_normalizer
 
-    def translate(self, data: dict) -> PostEntity:
+    def translate(self, data: dict) -> Optional[PostEntity]:
         raise NotImplementedError()
 
     def normalize_tags(self, tags: List[str]) -> List[str]:
