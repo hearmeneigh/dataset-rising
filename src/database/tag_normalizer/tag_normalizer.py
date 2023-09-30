@@ -462,7 +462,7 @@ class TagNormalizer:
         if rating == Rating.EXPLICIT:
             tags.append(f'rating_explicit')
 
-        if score > 1500 and favorites > 3000:
+        if score > 800 and favorites > 1800:
             tags.append('rising_masterpiece')
 
         if score is not None and score < 10 and favorites is not None and favorites < 10:
