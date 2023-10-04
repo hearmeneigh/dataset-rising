@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import Optional
 
 from PIL import Image
@@ -7,7 +8,7 @@ from database.entities.post import PostEntity
 
 def load_image(file: bytes, post: PostEntity) -> Optional[Image.Image]:
     try:
-        im = Image.open(file)
+        im = Image.open(BytesIO(file))
 
         return im.convert('RGB')
 

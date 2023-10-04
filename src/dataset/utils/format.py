@@ -3,7 +3,6 @@ import random
 from typing import List
 
 from database.entities.post import PostEntity
-from utils.progress import Progress
 
 from .download import download_image
 from .load import load_image
@@ -11,10 +10,10 @@ from .resize import resize_image
 
 
 def format_posts_for_dataset(posts: List[PostEntity], agent: str, image_width: int, image_height: int, image_format: str, image_quality: int, separator: str):
-    progress = Progress('Downloading and importing images', 'images')
+    if image_format.upper() == 'JPG' or image_format.upper() == '.JPG':
+        image_format = 'JPEG'
 
     for post in posts:
-        progress.update()
         download = download_image(post, agent)
 
         if download is None:
@@ -50,6 +49,4 @@ def format_posts_for_dataset(posts: List[PostEntity], agent: str, image_width: i
         }
 
         yield record
-
-    progress.succeed(f'{progress.count} images imported')
 

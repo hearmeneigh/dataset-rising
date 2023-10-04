@@ -7,17 +7,17 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="$PROJECT_DIR$/venv/bin/python" />
-    <option name="SDK_NAME" value="Python 3.11 (dataset-rising)" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/database" />
+    <option name="SDK_NAME" value="Python 3.9 (dataset-rising)" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dataset/build.py" />
-    <option name="PARAMETERS" value="--source /tmp/e621-curated.yaml --source /tmp/e621-positive.yaml --source /tmp/e621-negative.yaml --source /tmp/e621-uncurated.yaml --agent &quot;helloworld&quot; --export-tags /tmp/e621-tag-counts.json --min-posts-per-tag 20 --min-tags-per-post 5 --limit 100" />
+    <option name="SCRIPT_NAME" value="dataset.dr_build" />
+    <option name="PARAMETERS" value="--samples /tmp/dr/build/samples/tier-1.jsonl:40% --samples /tmp/dr/build/samples/tier-2.jsonl:30% --samples /tmp/dr/build/samples/tier-3.jsonl:20% --samples /tmp/dr/build/samples/tier-4.jsonl:10% --agent &quot;helloworld&quot; --output /tmp/dr/build/dataset/data --export-tags /tmp/dr/build/dataset/tag-counts.json --export-autocomplete /tmp/dr/build/dataset/webui-autocomplete.csv --min-posts-per-tag 150 --min-tags-per-post 15 --prefilter /tmp/e621-rising-configs/dataset/prefilter.yaml --image-width 1024 --image-height 1024 --image-format jpg --image-quality 95 --num-proc 1 --limit 100" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
-    <option name="MODULE_MODE" value="false" />
+    <option name="MODULE_MODE" value="true" />
     <option name="REDIRECT_INPUT" value="false" />
     <option name="INPUT_FILE" value="" />
     <method v="2" />

@@ -22,7 +22,7 @@ from dataset.utils.selection_source import SelectionSource
 
 def get_args():
     parser = argparse.ArgumentParser(prog='Build', description='Build an image dataset from JSONL file(s)')
-    parser.add_argument('-o', '--output', metavar='PATH', type=str, action='append', help='Path where the dataset will be stored', required=True)
+    parser.add_argument('-o', '--output', metavar='PATH', type=str, help='Path where the dataset will be stored', required=True)
     parser.add_argument('-s', '--samples', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
     parser.add_argument('--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
@@ -33,7 +33,7 @@ def get_args():
     parser.add_argument('--image-width', metavar='PIXELS', type=int, help='Maximum width for stored images', required=False, default=4096)
     parser.add_argument('--image-height', metavar='PIXELS', type=int, help='Maximum height for stored images', required=False, default=4096)
     parser.add_argument('--image-format', metavar='FORMAT', type=str, help='Storage image format [jpg, png]', choices=['jpg', 'png'], required=False, default='jpg')
-    parser.add_argument('--image-quality', metavar='PERCENTAGE', type=str, help='Storage image quality (JPEG only)', required=False, default=85)
+    parser.add_argument('--image-quality', metavar='PERCENTAGE', type=int, help='Storage image quality (JPEG only)', required=False, default=85)
     parser.add_argument('--num-proc', metavar='COUNT', type=int, help='Maximum number of parallel processes', required=False, default=1)
     parser.add_argument('--upload-to-hf', metavar='USER_NAME/DATASET_NAME', type=int, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
     parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)
@@ -53,10 +53,15 @@ def get_args():
 def main():
     args = get_args()
 
+    print('Loading filters')
     prefilters = {key: True for key in load_yaml(args.prefilter).get('tags', [])}
+
+    p = Progress('Loading samples', 'samples')
     selections = [SelectionSource(samples) for samples in args.samples]
+    p.succeed('Samples loaded!')
 
     # remove duplicates
+    print('Removing duplicates')
     for (index, selection) in enumerate(selections):
         if index > 0:
             before_sels = selections[0:index-1]
@@ -64,15 +69,18 @@ def main():
             selection.posts = list(set(selection.posts).difference(before_posts))
 
     # balance selections
+    print('Balancing buckets')
     balance_selections(selections)
 
     # combine selections
+    print('Combining buckets')
     posts = [post for sel in selections for post in sel.posts]
 
     for selection in selections:
         print(f'Using {len(selection.posts)} ({round(len(selection.posts)/len(posts)*100, 1)}%) from {selection.filename}')
 
     # prune and filter tags
+    print('Pruning tags...')
     tag_counts = prune_and_filter_tags(posts, prefilters, args.min_posts_per_tag)
 
     print(f'Using {len(tag_counts)} tags')
@@ -82,17 +90,20 @@ def main():
         post.tags = [tag for tag in post.tags if tag_counts.get(tag, 0) >= args.min_posts_per_tag]
 
     # remove posts that have too few tags
+    print('Pruning posts...')
     posts = [post for post in posts if len(post.tags) >= args.min_tags_per_post]
 
     # save tags
+    print('Saving tags...')
     if args.export_tags is not None:
         os.makedirs(os.path.dirname(args.export_tags), exist_ok=True)
 
         with open(args.export_tags, 'w') as fp:
-            tag_dict = {tag_name: tag_count for tag_count, tag_name in tag_counts.items() if tag_count >= args.min_posts_per_tag}
+            tag_dict = {tag_name: tag_count for tag_name, tag_count in tag_counts.items() if tag_count >= args.min_posts_per_tag}
             json.dump(tag_dict, fp, indent=2)
 
     # save autocomplete
+    print('Saving autocomplete...')
     if args.export_autocomplete is not None:
         os.makedirs(os.path.dirname(args.export_autocomplete), exist_ok=True)
         (db, client) = connect_to_db()
@@ -101,25 +112,28 @@ def main():
         tag_normalizer = load_normalizer_from_database(db)
 
         with open(args.export_autocomplete, 'w') as csv_file:
-            for (tag_count, tag_name) in tag_counts.items():
+            for (tag_name, tag_count) in tag_counts.items():
                 tag = tag_normalizer.get(tag_name)
 
                 if tag is None:
-                    print('Unexpected tag not found in database: "{tag_name}"')
+                    print(f'Unexpected tag not found in database: "{tag_name}"')
                     continue
 
                 known_aliases = [t for t in [tag.v1_name, tag.v2_name, tag.v2_short, tag.origin_name] if t != tag.preferred_name]
 
-                for alias in tag.aliases:
-                    if alias != tag.preferred_name and alias.strip() != '':
-                        known_aliases.append(alias)
+                if tag.aliases is not None:
+                    for alias in tag.aliases:
+                        if alias != tag.preferred_name and alias.strip() != '':
+                            known_aliases.append(alias)
 
                 csv_file.write(f"{tag.preferred_name},{numeric_categories.get(tag.category, 0)},{tag_count},\"{','.join(set(known_aliases))}\"\n")
 
     # shuffle posts
+    print('Shuffling posts...')
     random.shuffle(posts)
 
     # generate dataset
+    print('Generating the dataset & downloading images...')
     ds = Dataset.from_generator(
       format_posts_for_dataset,
       features=datasets.Features(
@@ -159,8 +173,11 @@ def main():
     ds = ds.with_format(**initial_format)
     p.succeed('Shard sizing complete')
 
+    os.makedirs(args.output, exist_ok=True)
+    ds.save_to_disk(args.output, max_shard_size='1GB', num_proc=args.num_proc)
+
     # upload to huggingface
-    if args.upload_to_huggingface is not None:
+    if args.upload_to_hf is not None:
         p = Progress(f'Uploading to Huggingface {args.upload_to_huggingface}', 'bytes')
         # max_shard_size must be < 2GB, or you will run into problems
         ds.push_to_hub(args.upload_to_huggingface, private=True, max_shard_size='1GB')
