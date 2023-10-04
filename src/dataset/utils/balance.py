@@ -23,7 +23,7 @@ def balance_selections(selections: List[SelectionSource]):
 
         if intended_size < len(selection.posts):
             print(
-                f'WARNING: Selection {selection.filename} has {len(selection.posts)} posts, but could only use {intended_size} of them due to ratio limits. Additional posts were discarded.'
+                f'WARNING: Selection {selection.filename} has {len(selection.posts)} posts, but only {intended_size} were used due to ratio limits. Additional posts were discarded.'
             )
 
         selection.posts = selection.posts[0:intended_size]

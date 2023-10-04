@@ -410,7 +410,8 @@ class TagNormalizer:
     def clean_proto_name(self, proto_name: str) -> str:
         return anyascii(proto_name.replace('♂', '_male').replace('♀', '_female')).strip().lower()
 
-    def get_unique_tag_id(self, tag: Union[TagProtoEntity, TagEntity]) -> str:
+    @staticmethod
+    def get_unique_tag_id(tag: Union[TagProtoEntity, TagEntity]) -> str:
         return f'{tag.source.value if "value" in tag.source else tag.source}___{tag.source_id}'
 
     def get_category_naming_order(self, category: Category) -> int:

@@ -9,6 +9,7 @@ import random
 import json
 import os
 
+from database.entities.post import PostEntity
 from database.tag_normalizer.util import load_normalizer_from_database
 from database.utils.db_utils import connect_to_db
 from database.utils.enums import numeric_categories
@@ -50,6 +51,10 @@ def get_args():
     return args
 
 
+def get_unique_post_id(post: PostEntity) -> str:
+    return f'{post.source.value if "value" in post.source else post.source}___{post.source_id}'
+
+
 def main():
     args = get_args()
 
@@ -64,9 +69,14 @@ def main():
     print('Removing duplicates')
     for (index, selection) in enumerate(selections):
         if index > 0:
-            before_sels = selections[0:index-1]
-            before_posts = [post for sel in before_sels for post in sel.posts]
-            selection.posts = list(set(selection.posts).difference(before_posts))
+            original_count = len(selection.posts)
+            before_sels = selections[0:index]
+            before_posts = set([get_unique_post_id(post) for sel in before_sels for post in sel.posts])
+            selection.posts = [post for post in selection.posts if get_unique_post_id(post) not in before_posts]
+
+            if len(selection.posts) != original_count:
+                print(f'Removed {original_count - len(selection.posts)} duplicates from {selection.filename}')
+
 
     # balance selections
     print('Balancing buckets')
@@ -91,7 +101,9 @@ def main():
 
     # remove posts that have too few tags
     print('Pruning posts...')
+    old_post_count = len(posts)
     posts = [post for post in posts if len(post.tags) >= args.min_tags_per_post]
+    print(f'Pruned {old_post_count - len(posts)} posts')
 
     # save tags
     print('Saving tags...')
