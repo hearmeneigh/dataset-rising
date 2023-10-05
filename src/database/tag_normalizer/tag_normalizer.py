@@ -10,9 +10,9 @@ from database.entities.tag import TagEntity, TagProtoEntity, TagRef, TagVersion
 from utils.progress import Progress
 
 scoreAboveMilestones = [100, 250, 500, 1000, 1500, 2000]
-scoreBelowMilestones = [0, 25, 50, 100]
+scoreBelowMilestones = [0, 25, 50, 100, 250, 500]
 favAboveMilestones = [250, 500, 1000, 2000, 3000, 4000]
-favBelowMilestones = [25, 50, 100, 250]
+favBelowMilestones = [25, 50, 100, 250, 500, 1000]
 ratingMilestones = [Rating.SAFE, Rating.QUESTIONABLE, Rating.EXPLICIT]
 
 long_name_categories = [Category.SYMBOL, Category.ASPECT_RATIO, Category.SCORE, Category.FAVORITES, Category.RATING, Category.COMMENTS, Category.VIEWS, Category.DESCRIPTION, Category.RISING]
