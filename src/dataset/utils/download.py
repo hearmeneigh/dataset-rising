@@ -21,7 +21,7 @@ def global_fetch(url, agent: str) -> Optional[bytes]:
     }, allow_redirects=True)
 
     if r.status_code != 200:
-        print(f'Could not fetch {url}: {r.status_code} – {r.text}')
+        print(f'Could not fetch {url}: {r.status_code}')
         return None
 
     return r.content
