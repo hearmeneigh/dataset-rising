@@ -8,12 +8,12 @@ from crawl.crawler.helpers import get_crawler
 
 
 def get_args():
-    parser = argparse.ArgumentParser(prog='Crawl', description='Download metadata from e926, e621, gelbooru, and danbooru')
+    parser = argparse.ArgumentParser(prog='Crawl', description='Download metadata from e926, e621, gelbooru, rule34, and danbooru')
 
     parser.add_argument('-o', '--output', metavar='FILE', type=str, help='Output JSONL file', required=True)
     parser.add_argument('-a', '--agent', metavar='AGENT', type=str, help='Unique user agent string (e.g. "mycrawler/1.0 (by myusername)")', required=True)
     parser.add_argument('-t', '--type', metavar='TYPE', type=str, help='Crawl type [search, index, tags, implications, aliases]', required=True, choices=['search', 'posts', 'tags', 'implications', 'aliases'])
-    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Crawl source [e926, e621, gelbooru, danbooru]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
+    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Crawl source [e926, e621, gelbooru, danbooru, rule34]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru', 'rule34'])
     parser.add_argument('-q', '--query', metavar='KEYWORD', type=str, help='Crawl query', required=False)
     parser.add_argument('-r', '--recover', default=False, action='store_true', help='Recover from last crawl position')
 

@@ -7,10 +7,10 @@ from database.utils.db_utils import connect_to_db
 
 
 def get_args():
-    parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, and danbooru')
+    parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, rule34, and danbooru')
 
     parser.add_argument('-p', '--posts', type=str, action='append', help='Post JSONL file(s) to import', required=True)
-    parser.add_argument('-s', '--source', type=str, help='Data source [e926, e621, gelbooru, danbooru]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
+    parser.add_argument('-s', '--source', type=str, help='Data source [e926, e621, gelbooru, danbooru, rule34]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru', 'rule34'])
 
     return parser.parse_args()
 

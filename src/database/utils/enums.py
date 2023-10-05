@@ -11,9 +11,10 @@ class Format(str, Enum):
 
 
 class Source(str, Enum):
-    E621 = 'e621',
-    GELBOORU = 'gelbooru',
+    E621 = 'e621'
+    GELBOORU = 'gelbooru'
     DANBOORU = 'danbooru'
+    RULE34 = 'rule34'
     RISING = 'rising'
 
 

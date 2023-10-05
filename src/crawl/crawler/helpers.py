@@ -167,6 +167,36 @@ def get_danbooru_tag_crawler(output_file: str):
     )
 
 
+def get_rule34_search_crawler(output_file: str, search_query: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1000&json=1&tags=' + urllib.parse.quote(search_query),
+        page_type='index',
+        page_field='pid',
+        json_field=None
+    )
+
+
+def get_rule34_index_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1000&json=1',
+        page_type='index',
+        page_field='pid',
+        json_field=None
+    )
+
+
+def get_rule34_tag_crawler(output_file: str):
+    return Crawler(
+        output_file=output_file,
+        base_url='https://api.rule34.xxx/index.php?page=dapi&s=tag&q=index&limit=100&json=1',
+        page_type='index',
+        page_field='pid',
+        json_field=None
+    )
+
+
 def get_crawler(source: str, type: str, output_file: str, search_query: Optional[str]) -> Crawler:
     if source == 'e926':
         if type == 'posts':
@@ -197,12 +227,19 @@ def get_crawler(source: str, type: str, output_file: str, search_query: Optional
             return get_gelbooru_search_crawler(output_file, search_query)
         elif type == 'tags':
             return get_gelbooru_tag_crawler(output_file)
-    elif source == 'posts':
+    elif source == 'danbooru':
         if type == 'index':
             return get_danbooru_index_crawler(output_file)
         elif type == 'search':
             return get_danbooru_search_crawler(output_file, search_query)
         elif type == 'tags':
             return get_danbooru_tag_crawler(output_file)
+    elif source == 'rule34':
+        if type == 'index':
+            return get_rule34_index_crawler(output_file)
+        elif type == 'search':
+            return get_rule34_search_crawler(output_file, search_query)
+        elif type == 'tags':
+            return get_rule34_tag_crawler(output_file)
 
     raise NotImplementedError(f'Unsupported source (\'{source}\') or type (\'{type}\')')
