@@ -29,6 +29,9 @@ class PostTranslator(Translator):
         if self.deep_tag_search:
             if tag_name in self.deep_tag_search_cache:
                 tag = self.deep_tag_search_cache.get(tag_name)
+
+                if tag is None:
+                    self.tag_normalizer.deep_search_misses[tag_name] = self.tag_normalizer.deep_search_misses.get(tag_name, 0) + 1
             else:
                 tag = self.tag_normalizer.get_by_deep_search(tag_name)
                 self.deep_tag_search_cache[tag_name] = tag

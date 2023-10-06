@@ -33,7 +33,7 @@ def get_args():
 
     parser.add_argument('-p', '--posts', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('-t', '--tags', metavar='FILE', type=str, help='Tag JSONL file(s)', required=True, action='append')
-    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Data source [e926, e621, gelbooru, danbooru]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru'])
+    parser.add_argument('-s', '--source', metavar='SOURCE', type=str, help='Data source [e926, e621, gelbooru, danbooru, rule34]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru', 'rule34'])
     parser.add_argument('-a', '--aliases', metavar='FILE', type=str, help='Tag alias JSONL file(s)', required=False, default=None)
     parser.add_argument('--tag-version', metavar='VERSION', type=str, help='Preferred tag format version [v0, v1, v2]', required=False, default='v2', choices=['v0', 'v1', 'v2'])
     parser.add_argument('--prefilter', metavar='FILE', type=str, help='Prefilter YAML file', required=False, default='../examples/tag_normalizer/prefilter.yaml')

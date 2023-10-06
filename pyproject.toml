@@ -1,6 +1,6 @@
 [project]
 name = 'DatasetRising'
-version = '0.1.43'
+version = '0.1.44'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
 requires-python = '>=3.8'
@@ -41,6 +41,7 @@ classifiers = [
 'dr-db-down' = 'database.dr_db_down:main'
 'dr-db-uninstall' = 'database.dr_db_uninstall:main'
 'dr-crawl' = 'crawl.dr_crawl:main'
+'dr-add-tag' = 'database.dr_add_tag:main'
 'dr-append' = 'database.dr_append:main'
 'dr-gap' = 'database.dr_gap:main'
 'dr-import' = 'database.dr_import:main'

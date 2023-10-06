@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 
 class Format(str, Enum):
@@ -16,6 +17,13 @@ class Source(str, Enum):
     DANBOORU = 'danbooru'
     RULE34 = 'rule34'
     RISING = 'rising'
+
+
+def to_source(source_str: str) -> Optional[Source]:
+    for s in Source:
+        if s.value == source_str:
+            return s
+    return None
 
 
 class Rating(str, Enum):
@@ -54,6 +62,14 @@ class Category(str, Enum):
     DESCRIPTION = 'description'
     RISING = 'rising'
     INVALID = 'invalid'
+
+
+def to_category(category_str: str) -> Category:
+    for c in Category:
+        if c.value == category_str:
+            return c
+    return Category.INVALID
+
 
 numeric_categories = {
     Category.GENERAL: 0,

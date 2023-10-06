@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Dict
 
-from database.utils.enums import Source, Category
+from database.utils.enums import Source, Category, to_source, to_category
 
 
 class AlternativeTagSource:
@@ -35,6 +35,9 @@ class TagEntity:
         if tag is not None:
             for key in tag:
                 setattr(self, key, tag[key])
+
+            self.source = to_source(self.source)
+            self.category = to_category(self.category)
 
     source: Source
     source_id: str

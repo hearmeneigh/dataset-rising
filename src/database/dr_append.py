@@ -1,13 +1,14 @@
 import argparse
+import json
 
 from database.importer.importer import Importer
 from database.tag_normalizer.util import load_normalizer_from_database
-from database.translator.helpers import get_post_translator, get_tag_translator
+from database.translator.helpers import get_post_translator
 from database.utils.db_utils import connect_to_db
 
 
 def get_args():
-    parser = argparse.ArgumentParser(prog='Append', description='Append post metadata from e621, gelbooru, rule34, and danbooru')
+    parser = argparse.ArgumentParser(prog='Append', description='Add posts from e621, gelbooru, rule34, and danbooru')
 
     parser.add_argument('-p', '--posts', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('-s', '--source', type=str, help='Data source [e926, e621, gelbooru, danbooru, rule34]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru', 'rule34'])
@@ -22,7 +23,6 @@ def main():
 
     # process tags
     tag_normalizer = load_normalizer_from_database(db)
-    # tag_translator = get_tag_translator(args.source, aliases={})
 
     # process posts
     post_translator = get_post_translator(args.source, tag_normalizer, deep_tag_search=True)
@@ -31,6 +31,7 @@ def main():
     for post_file in args.posts:
         post_importer.import_jsonl(post_file)
 
+    print(json.dumps(tag_normalizer.deep_search_misses))
 
 if __name__ == "__main__":
     main()

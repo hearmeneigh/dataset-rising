@@ -35,6 +35,8 @@ class TagNormalizer:
     # determines which tag gets the preferred no-prefix name
     category_naming_order: Dict[Category, int] = {}
 
+    deep_search_misses: Dict[str, int] = {}
+
     def __init__(self, prefilter: Dict[str, bool] = None, symbols: List[str] = None, aspect_ratios: List[str] = None, rewrites: Dict[str, dict] = None, category_naming_order: Dict[Category, int] = None):
         if prefilter is None:
             prefilter = {}
@@ -139,7 +141,7 @@ class TagNormalizer:
             count=tag.post_count
         )
 
-    def add_tag(self, tag_ref: str, proto_tag: TagProtoEntity, version: TagVersion):
+    def add_tag(self, tag_ref: str, proto_tag: TagProtoEntity, version: TagVersion) -> TagEntity:
         try:
             tag_ref = self.clean(tag_ref)
             tag = self.register_tag_reference(proto_tag)
@@ -169,6 +171,8 @@ class TagNormalizer:
             else:
                 if version not in ref_record.versions:
                     ref_record.versions.append(version)
+
+            return tag
         except Exception as e:
             print(f'Loading tag {tag_ref} failed: {str(e)} -- {str(proto_tag)}')
             raise
@@ -432,7 +436,9 @@ class TagNormalizer:
                 if tag_name in tag.aliases:
                     return tag
 
-        print(f'Warning: could not translate tag "{tag_name}" -- ignored')
+        print(f'Warning: could not locate relevant tag for "{tag_name}" -- ignored')
+        self.deep_search_misses[tag_name] = self.deep_search_misses.get(tag_name, 0) + 1
+
         return None
 
     def get(self, tag_name: str) -> Optional[TagEntity]:
@@ -528,7 +534,7 @@ class TagNormalizer:
                 source=Source.RISING,
                 source_id=f'favorites_below_{threshold}',
                 post_count=0,
-                aliases = []
+                aliases=[]
             ), TagVersion.V2)
 
         for rating in ratingMilestones:
