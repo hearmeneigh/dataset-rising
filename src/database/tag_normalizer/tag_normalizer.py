@@ -423,6 +423,18 @@ class TagNormalizer:
     def get_by_original_name(self, tag_name: str) -> Optional[TagEntity]:
         return self.original_map.get(tag_name, None)
 
+    def get_by_deep_search(self, tag_name: str) -> Optional[TagEntity]:
+        for tag in self.id_map.values():
+            if tag.reference_name == tag_name:
+                return tag
+
+            if tag.aliases is not None:
+                if tag_name in tag.aliases:
+                    return tag
+
+        print(f'Warning: could not translate tag "{tag_name}" -- ignored')
+        return None
+
     def get(self, tag_name: str) -> Optional[TagEntity]:
         ref = self.ref_map.get(tag_name, None)
 
@@ -438,21 +450,23 @@ class TagNormalizer:
 
         tags = []
 
-        for threshold in scoreAboveMilestones:
-            if score > threshold:
-                tags.append(f'score_above_{threshold}')
+        if score is not None:
+            for threshold in scoreAboveMilestones:
+                if score > threshold:
+                    tags.append(f'score_above_{threshold}')
 
-        for threshold in scoreBelowMilestones:
-            if score < threshold:
-                tags.append(f'score_below_{threshold}')
+            for threshold in scoreBelowMilestones:
+                if score < threshold:
+                    tags.append(f'score_below_{threshold}')
 
-        for threshold in favAboveMilestones:
-            if favorites > threshold:
-                tags.append(f'favorites_above_{threshold}')
+        if favorites is not None:
+            for threshold in favAboveMilestones:
+                if favorites > threshold:
+                    tags.append(f'favorites_above_{threshold}')
 
-        for threshold in favBelowMilestones:
-            if favorites < threshold:
-                tags.append(f'favorites_below_{threshold}')
+            for threshold in favBelowMilestones:
+                if favorites < threshold:
+                    tags.append(f'favorites_below_{threshold}')
 
         if rating == Rating.SAFE:
             tags.append(f'rating_safe')
@@ -463,8 +477,9 @@ class TagNormalizer:
         if rating == Rating.EXPLICIT:
             tags.append(f'rating_explicit')
 
-        if score >= 650 or favorites >= 1500:
-            tags.append('rising_masterpiece')
+        if score is not None and favorites is not None:
+            if score >= 650 or favorites >= 1500:
+                tags.append('rising_masterpiece')
 
         if score is not None and score < 15:
             tags.append('rising_unpopular')

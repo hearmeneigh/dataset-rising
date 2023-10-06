@@ -7,7 +7,7 @@ from database.utils.db_utils import connect_to_db
 
 
 def get_args():
-    parser = argparse.ArgumentParser(prog='Import', description='Import post and tag metadata from e621, gelbooru, rule34, and danbooru')
+    parser = argparse.ArgumentParser(prog='Append', description='Append post metadata from e621, gelbooru, rule34, and danbooru')
 
     parser.add_argument('-p', '--posts', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('-s', '--source', type=str, help='Data source [e926, e621, gelbooru, danbooru, rule34]', required=True, choices=['e926', 'e621', 'gelbooru', 'danbooru', 'rule34'])
@@ -25,8 +25,8 @@ def main():
     # tag_translator = get_tag_translator(args.source, aliases={})
 
     # process posts
-    post_translator = get_post_translator(args.source, tag_normalizer)
-    post_importer = Importer(db, 'posts', post_translator, tag_normalizer)
+    post_translator = get_post_translator(args.source, tag_normalizer, deep_tag_search=True)
+    post_importer = Importer(db, 'posts', post_translator, tag_normalizer, skip_if_md5_match=True)
 
     for post_file in args.posts:
         post_importer.import_jsonl(post_file)

@@ -12,8 +12,10 @@ class Translator:
 
 
 class PostTranslator(Translator):
-    def __init__(self, tag_normalizer: TagNormalizer):
+    def __init__(self, tag_normalizer: TagNormalizer, deep_tag_search: bool = False):
         self.tag_normalizer = tag_normalizer
+        self.deep_tag_search = deep_tag_search
+        self.deep_tag_search_cache = {}
 
     def translate(self, data: dict) -> Optional[PostEntity]:
         raise NotImplementedError()
@@ -24,7 +26,14 @@ class PostTranslator(Translator):
         return included_tags
 
     def normalize_tag(self, tag_name) -> Optional[str]:
-        tag = self.tag_normalizer.get_by_original_name(tag_name)
+        if self.deep_tag_search:
+            if tag_name in self.deep_tag_search_cache:
+                tag = self.deep_tag_search_cache.get(tag_name)
+            else:
+                tag = self.tag_normalizer.get_by_deep_search(tag_name)
+                self.deep_tag_search_cache[tag_name] = tag
+        else:
+            tag = self.tag_normalizer.get_by_original_name(tag_name)
 
         if tag is None:
             return None
