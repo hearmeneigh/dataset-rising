@@ -11,7 +11,7 @@ class DanbooruPostTranslator(PostTranslator):
     def translate(self, data: dict) -> Optional[PostEntity]:
         score = int(data.get('score', 0))
         favorites = int(data.get('fav_count', 0))
-        comments = int(data['comment_count'])
+        comments = int(data.get('comment_count', 0))
 
         p = PostEntity()
 

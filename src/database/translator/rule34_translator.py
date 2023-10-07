@@ -11,7 +11,7 @@ class Rule34PostTranslator(PostTranslator):
     def translate(self, data: dict) -> Optional[PostEntity]:
         score = int(data.get('score', 0))
         favorites = None
-        comments = int(data['comment_count'])
+        comments = int(data.get('comment_count'))
 
         p = PostEntity()
 
