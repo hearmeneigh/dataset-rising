@@ -8,14 +8,18 @@ from database.entities.post import PostEntity
 
 class SelectionSource:
     def __init__(self, filename_with_ratio: str):
-        match = re.match(r'^(.*):([0-9.]+)%$', filename_with_ratio)
+        match = re.match(r'^(.*):([0-9.*]+)%$', filename_with_ratio)
 
         if match is None:
             filename = filename_with_ratio
             ratio = 1.0
         else:
             filename = match.group(1)
-            ratio = float(match.group(2)) / 100.0
+
+            if match.group(2) == '*':
+                ratio = 'all'
+            else:
+                ratio = float(match.group(2)) / 100.0
 
         self.filename = filename
         self.ratio = ratio

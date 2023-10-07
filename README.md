@@ -117,7 +117,8 @@ dr-select --selector ./examples/select/uncurated.yaml --output /tmp/uncurated.js
 ```
 
 ### 5. Build a Dataset
-After selecting the posts for the dataset, use `dr-build` to download the images and build the actual dataset.
+After selecting the posts for the dataset, use `dr-join` to combine the selections and 
+`dr-build` to download the images and build the actual dataset.
 
 By default, the build script prunes all tags that have fewer than 100 samples. To adjust this limit, use `--min-posts-per-tag LIMIT`.
 
@@ -126,14 +127,18 @@ The build script will also prune all images that have fewer than 10 tags. To adj
 Adding a percentage at the end of a `--source` tells the build script to pick that many samples of the total dataset from the given source, e.g. `--source ./my.jsonl:50%`.
 
 ```bash
+dr-join \
+  --samples '/tmp/curated.jsonl:30%' \
+  --samples '/tmp/positive.jsonl:40%' \
+  --samples '/tmp/negative.jsonl:20%' \
+  --samples '/tmp/uncurated.jsonl:10%' \
+  --output '/tmp/joined.jsonl'
+
 dr-build \
-  --source '/tmp/curated.jsonl:30%' \
-  --source '/tmp/positive.jsonl:40%' \
-  --source '/tmp/negative.jsonl:20%' \
-  --source '/tmp/uncurated.jsonl:10%' \
-  --output /tmp/my-dataset \
-  --upload-to-hf username/dataset-name \
-  --upload-to-s3 s3://some-bucket/some/path
+  --source '/tmp/joined.jsonl' \
+  --output '/tmp/my-dataset' \
+  --upload-to-hf 'username/dataset-name' \
+  --upload-to-s3 's3://some-bucket/some/path'
 ```
 
 ### 6. Train a Model
@@ -315,9 +320,14 @@ flowchart TD
     IMPORT[Import posts, tags, and tag aliases] --> STORE
     APPEND[Append additional posts] --> STORE
     STORE[Database] --> PREVIEW
-    STORE --> SELECT
+    STORE --> SELECT1
+    STORE --> SELECT2
+    STORE --> SELECT3
     PREVIEW[Preview selectors] --> HTML(HTML)
-    SELECT[Select samples] -- JSONL --> BUILD
+    SELECT1[Select samples] -- JSONL --> JOIN
+    SELECT2[Select samples] -- JSONL --> JOIN
+    SELECT3[Select samples] -- JSONL --> JOIN
+    JOIN[Join and prune samples] -- JSONL --> BUILD 
     BUILD[Build dataset] -- HF Dataset/Parquet --> TRAIN
     TRAIN[Train model] --> MODEL[Model]
 ```
