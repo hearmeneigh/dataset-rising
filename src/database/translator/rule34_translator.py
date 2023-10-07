@@ -16,11 +16,11 @@ class Rule34PostTranslator(PostTranslator):
         p = PostEntity()
 
         p.source = Source.RULE34
-        p.source_id = str(data['id'])
+        p.source_id = str(data.get('id'))
 
-        p.rating = self.to_rating(data['rating'])
+        p.rating = self.to_rating(data.get('rating'))
 
-        all_tags = data['tags'].split(' ')
+        all_tags = data.get('tags', '').split(' ')
         p.tags = self.normalize_tags(all_tags)
 
         # p.description = data['description']

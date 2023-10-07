@@ -16,11 +16,11 @@ class DanbooruPostTranslator(PostTranslator):
         p = PostEntity()
 
         p.source = Source.DANBOORU
-        p.source_id = str(data['id'])
+        p.source_id = str(data.get('id'))
 
-        p.rating = data['rating']
+        p.rating = data.get('rating', 'e')
 
-        all_tags = data['tag_string'].split(' ')
+        all_tags = data.get('tag_string', '').split(' ')
         p.tags = self.normalize_tags(all_tags)
 
         # p.description = data['description']
@@ -56,7 +56,7 @@ class DanbooruPostTranslator(PostTranslator):
         p.comment_count = comments
         # view count not available
 
-        p.created_at = datetime.strptime(data['created_at'], '%Y-%m-%dT%H:%M:%S.%f%z')
+        p.created_at = datetime.strptime(data.get('created_at'), '%Y-%m-%dT%H:%M:%S.%f%z')
         p.timestamp = datetime.now()
 
         return p

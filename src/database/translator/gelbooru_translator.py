@@ -11,16 +11,16 @@ class GelbooruPostTranslator(PostTranslator):
     def translate(self, data: dict) -> Optional[PostEntity]:
         score = int(data.get('score', 0))
         favorites = None
-        comments = int(data['comment_count'])
+        comments = int(data.get('comment_count', 0))
 
         p = PostEntity()
 
         p.source = Source.GELBOORU
-        p.source_id = str(data['id'])
+        p.source_id = str(data.get('id'))
 
-        p.rating = self.to_rating(data['rating'])
+        p.rating = self.to_rating(data.get('rating'))
 
-        all_tags = data['tags'].split(' ')
+        all_tags = data.get('tags', '').split(' ')
         p.tags = self.normalize_tags(all_tags)
 
         # p.description = data['description']
@@ -56,7 +56,7 @@ class GelbooruPostTranslator(PostTranslator):
         p.comment_count = comments
         # view count not available
 
-        p.created_at = datetime.strptime(data['created_at'], '%Y-%m-%dT%H:%M:%S.%f%z')
+        p.created_at = datetime.strptime(data.get('created_at'), '%Y-%m-%dT%H:%M:%S.%f%z')
         p.timestamp = datetime.now()
 
         return p
