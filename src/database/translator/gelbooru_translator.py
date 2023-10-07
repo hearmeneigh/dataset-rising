@@ -56,7 +56,7 @@ class GelbooruPostTranslator(PostTranslator):
         p.comment_count = comments
         # view count not available
 
-        p.created_at = datetime.strptime(data.get('created_at'), '%Y-%m-%dT%H:%M:%S.%f%z')
+        p.created_at = datetime.strptime(data.get('created_at'), '%a %b %d %H:%M:%S %z %Y')
         p.timestamp = datetime.now()
 
         return p
