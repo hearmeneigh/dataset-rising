@@ -17,7 +17,7 @@ class SelectionSource:
             filename = match.group(1)
 
             if match.group(2) == '*':
-                ratio = 'all'
+                ratio = 'fixed'
             else:
                 ratio = float(match.group(2)[:-1]) / 100.0
 
