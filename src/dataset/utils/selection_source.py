@@ -19,7 +19,7 @@ class SelectionSource:
             if match.group(2) == '*':
                 ratio = 'all'
             else:
-                ratio = float(match.group(2)) / 100.0
+                ratio = float(match.group(2)[:-1]) / 100.0
 
         self.filename = filename
         self.ratio = ratio
