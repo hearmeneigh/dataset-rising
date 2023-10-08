@@ -56,7 +56,7 @@ def format_posts_for_dataset(samples: List[str], limit: Optional[int], agent: st
                     'tags': shuffled_tags,
                     'url': post.image_url,
                     'text': separator.join(shuffled_tags),
-                    'desc': post.description,
+                    'desc': post.description if 'description' in post else '',
                     'selector': post.selector
                 }
 
