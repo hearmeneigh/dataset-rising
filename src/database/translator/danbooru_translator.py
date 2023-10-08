@@ -27,7 +27,7 @@ class DanbooruPostTranslator(PostTranslator):
 
         p.origin_urls = [data.get('source')]
         p.origin_md5 = data.get('md5')
-        p.origin_format = os.path.splitext(data.get('image'))[1][1:]
+        p.origin_format = os.path.splitext(data.get('image', data.get('file_url')))[1][1:]
         p.origin_size = None  # file.get('size')
 
         p.image_url = data.get('file_url')
