@@ -23,8 +23,8 @@ def get_args():
     parser.add_argument('--image-format', metavar='FORMAT', type=str, help='Storage image format [jpg, png]', choices=['jpg', 'png'], required=False, default='jpg')
     parser.add_argument('--image-quality', metavar='PERCENTAGE', type=int, help='Storage image quality (JPEG only)', required=False, default=85)
     parser.add_argument('--num-proc', metavar='COUNT', type=int, help='Maximum number of parallel processes', required=False, default=1)
-    parser.add_argument('--upload-to-hf', metavar='USER_NAME/DATASET_NAME', type=int, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
-    parser.add_argument('--upload-to-s3', metavar='S3_URL', type=int, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)
+    parser.add_argument('--upload-to-hf', metavar='USER_NAME/DATASET_NAME', type=str, help='Upload dataset to Huggingface (e.g. myuser/mynewdataset)', required=False, default=None)
+    parser.add_argument('--upload-to-s3', metavar='S3_URL', type=str, help='Upload dataset to S3 (e.g. s3://some-bucket/some-path)', required=False, default=None)
     parser.add_argument('--limit', metavar='COUNT', type=int, help='Limit samples in dataset', required=False, default=None)
     parser.add_argument('--separator', metavar='STRING', type=str, help='Separator string for tag lists', required=False, default=' ')
 
