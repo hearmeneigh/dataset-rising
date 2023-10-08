@@ -25,9 +25,14 @@ class Rule34PostTranslator(PostTranslator):
 
         # p.description = data['description']
 
+        filename = data.get('image', data.get('file_url'))
+
+        if filename is None:
+            return None
+
         p.origin_urls = []
         p.origin_md5 = data.get('hash')
-        p.origin_format = os.path.splitext(data.get(data.get('image', data.get('file_url'))))[1][1:]
+        p.origin_format = os.path.splitext(filename)[1][1:]
         p.origin_size = None  # file.get('size')
 
         p.image_url = data.get('file_url')
