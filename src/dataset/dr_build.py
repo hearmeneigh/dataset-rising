@@ -9,6 +9,7 @@ import os
 
 from database.entities.post import PostEntity
 from dataset.utils.format import format_posts_for_dataset
+from dataset.utils.split import split_posts
 from utils.progress import Progress
 
 
@@ -45,6 +46,9 @@ def get_unique_post_id(post: PostEntity) -> str:
 def main():
     args = get_args()
 
+    print("Splitting posts...")
+    split_filenames = split_posts(args.samples, args.limit, args.num_proc)
+
     # generate dataset
     print('Generating the dataset & downloading images...')
     ds = Dataset.from_generator(
@@ -57,22 +61,27 @@ def main():
           "tags": datasets.Sequence(datasets.Value(dtype='string', id=None)),
           "url": datasets.Value(dtype='string', id=None),
           "text": datasets.Value(dtype='string', id=None),
-          "desc": datasets.Value(dtype='string', id=None),
           "selector": datasets.Value(dtype='string', id=None),
         }
       ),
       num_proc=args.num_proc,
       gen_kwargs={
-            'samples': args.samples,
-            'limit': args.limit,
-            'agent': args.agent,
-            'image_width': args.image_width,
-            'image_height': args.image_height,
-            'image_format': args.image_format,
-            'image_quality': args.image_quality,
-            'separator': args.separator
+            'shards': [{
+                'samples': [fn],
+                'limit': args.limit,
+                'agent': args.agent,
+                'image_width': args.image_width,
+                'image_height': args.image_height,
+                'image_format': args.image_format,
+                'image_quality': args.image_quality,
+                'separator': args.separator
+            } for fn in split_filenames]
       }
     )
+
+    # remove extra files
+    for fn in split_filenames:
+        os.remove(fn)
 
     # cast images
     p = Progress('Casting image column', 'images')
