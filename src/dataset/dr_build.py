@@ -1,11 +1,11 @@
 import argparse
 
-import boto3
 import datasets
 from datasets import Dataset
 from datasets.table import embed_table_storage
 import re
 import os
+import s3fs
 
 from database.entities.post import PostEntity
 from dataset.utils.format import format_posts_for_dataset
@@ -101,15 +101,14 @@ def main():
 
     # upload to huggingface
     if args.upload_to_hf is not None:
-        p = Progress(f'Uploading to Huggingface {args.upload_to_hf}', 'bytes')
         # max_shard_size must be < 2GB, or you will run into problems
         ds.push_to_hub(args.upload_to_hf, private=True, max_shard_size='1GB')
-        p.succeed('Dataset uploaded to Huggingface')
 
     # upload to S3
     if args.upload_to_s3 is not None:
         p = Progress(f'Uploading to S3 {args.upload_to_s3}', 'bytes')
-        s3_client = boto3.client('s3')
+        s3_file = s3fs.S3FileSystem()
+        s3_file.put(args.output, args.upload_to_s3, recursive=True)
         p.succeed('Dataset uploaded to S3')
 
     print('Done!')
