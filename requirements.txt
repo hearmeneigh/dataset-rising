@@ -17,4 +17,4 @@ datasets==2.14.5
 torch==2.1.0
 torchvision==0.16.0
 pydash==7.0.6
-s3fs==2023.9.2
+s3fs==2023.1.0
