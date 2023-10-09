@@ -261,6 +261,7 @@ accelerate config
 # run training
 accelerate launch \
   --multi_gpu \
+  --mixed_precision=${PRECISION} \
   dr_train.py \
     --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
     --dataset-name 'username/dataset-name' \
@@ -278,9 +279,42 @@ accelerate launch \
     --lr-warmup-steps 0
 ```
 
+## Setting Up a Training Machine
+* Install `dataset-rising`
+* Install [Huggingface CLI](https://huggingface.co/docs/huggingface_hub/installation)
+* Install [Accelerate CLI](https://huggingface.co/docs/accelerate/basic_tutorials/install)
+* Configure Huggingface CLI (`huggingface-cli login`)
+* Configure Accelerate CLI (`accelerate config`)
+
+### Optional
+* Install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* Install [xFormers](https://github.com/facebookresearch/xformers)
+* Configure AWS CLI (`aws configure`)
+
+### Troubleshooting
+
+#### NCCL Errors
+Some configurations will require `NCCL_P2P_DISABLE=1` and/or `NCCL_IB_DISABLE=1` environment variables to be set.
+
+```bash
+export NCCL_P2P_DISABLE=1
+export NCCL_IB_DISABLE=1
+
+dr-train ...
+```
+
+### Cache Directories
+Use `HF_DATASETS_CACHE` and `HF_MODULES_CACHE` to control where Huggingface stores its cache files
+
+```bash
+export HF_DATASETS_CACHE=/workspace/cache/huggingface/datasets
+export HF_MODULES_CACHE=/workspace/cache/huggingface/modules
+
+dr-train ...
+```
+
 
 ## Developers
-
 ### Setting Up
 Creates a virtual environment, installs packages, and sets up a MongoDB database on Docker. 
 
@@ -331,3 +365,6 @@ flowchart TD
     BUILD[Build dataset] -- HF Dataset/Parquet --> TRAIN
     TRAIN[Train model] --> MODEL[Model]
 ```
+
+## Links
+* [SDXL training notes](https://rentry.org/59xed3#sdxl)
