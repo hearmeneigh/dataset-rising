@@ -101,9 +101,9 @@ def main():
 
     # upload to huggingface
     if args.upload_to_hf is not None:
-        p = Progress(f'Uploading to Huggingface {args.upload_to_huggingface}', 'bytes')
+        p = Progress(f'Uploading to Huggingface {args.upload_to_hf}', 'bytes')
         # max_shard_size must be < 2GB, or you will run into problems
-        ds.push_to_hub(args.upload_to_huggingface, private=True, max_shard_size='1GB')
+        ds.push_to_hub(args.upload_to_hf, private=True, max_shard_size='1GB')
         p.succeed('Dataset uploaded to Huggingface')
 
     # upload to S3
