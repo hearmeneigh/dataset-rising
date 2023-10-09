@@ -51,7 +51,8 @@ from diffusers.training_utils import EMAModel
 from diffusers.utils import check_min_version, deprecate, is_wandb_available, make_image_grid
 from diffusers.utils.import_utils import is_xformers_available
 
-from vendor.huggingface.diffusers.resize_with_pad import ResizeWithPad
+import s3fs
+from train.vendor.huggingface.diffusers.resize_with_pad import ResizeWithPad
 
 if is_wandb_available():
     import wandb
@@ -1139,6 +1140,10 @@ def main():
                 commit_message="End of training",
                 ignore_patterns=["step_*", "epoch_*"],
             )
+
+        if args.push_to_s3:
+            s3_file = s3fs.S3FileSystem()
+            s3_file.put(args.output_dir, args.push_to_s3, recursive=True)
 
     accelerator.end_training()
 

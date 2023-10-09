@@ -105,7 +105,7 @@ dr-preview --selector ./examples/select/positive/artists.yaml --output /tmp/cura
 > This section requires a running MongoDB database, which you can start with `dr-db-up` command.
 
 When you're confident that the selectors are producing the right kind of samples, it's time to select the posts for
-building a dataset. Use `dr-pick` to select posts from the database and store them in a JSONL file. 
+building a dataset. Use `dr-select` to select posts from the database and store them in a JSONL file. 
 
 ```bash
 cd <dataset-rising>/database
