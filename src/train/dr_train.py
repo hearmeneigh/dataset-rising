@@ -4,3 +4,6 @@ from train.vendor.huggingface.diffusers.train_text_to_image import main as vendo
 def main():
     vendor_main()
 
+
+if __name__ == "__main__":
+    main()

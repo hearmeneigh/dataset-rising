@@ -4,3 +4,6 @@ from train.vendor.huggingface.diffusers.convert_diffusers_to_original_stable_dif
 def main():
     vendor_main()
 
+
+if __name__ == "__main__":
+    main()

@@ -4,3 +4,6 @@ from train.vendor.huggingface.diffusers.convert_diffusers_to_original_sdxl impor
 def main():
     vendor_main()
 
+
+if __name__ == "__main__":
+    main()
