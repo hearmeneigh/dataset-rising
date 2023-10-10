@@ -1,6 +1,6 @@
 [project]
 name = 'DatasetRising'
-version = '0.1.70'
+version = '0.1.72'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
 requires-python = '>=3.8'
@@ -50,6 +50,7 @@ classifiers = [
 'dr-join' = 'dataset.dr_join:main'
 'dr-build' = 'dataset.dr_build:main'
 'dr-train' = 'train.dr_train:main'
+'dr-train-xl' = 'train.dr_train_xl:main'
 'dr-convert-sd' = 'train.dr_convert_sd:main'
 'dr-convert-sdxl' = 'train.dr_convert_sdxl:main'
 
