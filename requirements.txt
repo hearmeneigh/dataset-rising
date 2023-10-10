@@ -18,3 +18,5 @@ torch==2.0.1
 torchvision==0.15.2
 pydash==7.0.6
 s3fs==2023.1.0
+bitsandbytes==0.41.1
+xformers==0.0.22
