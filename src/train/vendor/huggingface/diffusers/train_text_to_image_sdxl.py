@@ -509,7 +509,7 @@ def reshuffle_tags(tag_cloud: str, separator: str) -> str:
 ## /CHANGE
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, reshuffle_tags, tag_separator, is_train=True):
+def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, should_reshuffle_tags, tag_separator, is_train=True):
     prompt_embeds_list = []
     prompt_batch = batch[caption_column]
 
@@ -526,7 +526,7 @@ def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, ca
         else:
             txt = ''
 
-        if reshuffle_tags is True:
+        if should_reshuffle_tags is True:
             txt = reshuffle_tags(txt, separator=tag_separator)
 
         captions.append(txt)
@@ -950,7 +950,7 @@ def main(args):
         tokenizers=tokenizers,
         proportion_empty_prompts=args.proportion_empty_prompts,
         caption_column=args.caption_column,
-        reshuffle_tags=args.reshuffle_tags,
+        should_reshuffle_tags=args.reshuffle_tags,
         tag_separator=args.tag_separator,
     )
     compute_vae_encodings_fn = functools.partial(compute_vae_encodings, vae=vae)
