@@ -509,7 +509,7 @@ def reshuffle_tags(tag_cloud: str, separator: str) -> str:
 ## /CHANGE
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, is_train=True):
+def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, reshuffle_tags, tag_separator, is_train=True):
     prompt_embeds_list = []
     prompt_batch = batch[caption_column]
 
@@ -522,10 +522,12 @@ def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, ca
             txt = caption
         elif isinstance(caption, (list, np.ndarray)):
             # take a random caption if there are multiple
-            caption = random.choice(caption) if is_train else caption[0]
+            txt = random.choice(caption) if is_train else caption[0]
+        else:
+            txt = ''
 
-        if args.reshuffle_tags is True:
-            txt = reshuffle_tags(txt, separator=args.tag_separator)
+        if reshuffle_tags is True:
+            txt = reshuffle_tags(txt, separator=tag_separator)
 
         captions.append(txt)
         # /CHANGE
@@ -948,6 +950,8 @@ def main(args):
         tokenizers=tokenizers,
         proportion_empty_prompts=args.proportion_empty_prompts,
         caption_column=args.caption_column,
+        reshuffle_tags=args.reshuffle_tags,
+        tag_separator=args.tag_separator,
     )
     compute_vae_encodings_fn = functools.partial(compute_vae_encodings, vae=vae)
     with accelerator.main_process_first():
