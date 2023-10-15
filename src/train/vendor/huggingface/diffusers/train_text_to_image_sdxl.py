@@ -334,60 +334,20 @@ def parse_args(input_args=None):
         "--lr-warmup-steps", type=int, default=500, help="Number of steps for the warmup in the lr scheduler."
     )
     parser.add_argument(
-        "--timestep-bias-strategy",
-        type=str,
-        default="none",
-        choices=["earlier", "later", "range", "none"],
-        help=(
-            "The timestep bias strategy, which may help direct the model toward learning low or high frequency details."
-            " Choices: ['earlier', 'later', 'range', 'none']."
-            " The default is 'none', which means no bias is applied, and training proceeds normally."
-            " The value of 'later' will increase the frequency of the model's final training timesteps."
-        ),
-    )
-    parser.add_argument(
-        "--timestep-bias-multiplier",
-        type=float,
-        default=1.0,
-        help=(
-            "The multiplier for the bias. Defaults to 1.0, which means no bias is applied."
-            " A value of 2.0 will double the weight of the bias, and a value of 0.5 will halve it."
-        ),
-    )
-    parser.add_argument(
-        "--timestep-bias-begin",
-        type=int,
-        default=0,
-        help=(
-            "When using `--timestep_bias_strategy=range`, the beginning (inclusive) timestep to bias."
-            " Defaults to zero, which equates to having no specific bias."
-        ),
-    )
-    parser.add_argument(
-        "--timestep-bias-end",
-        type=int,
-        default=1000,
-        help=(
-            "When using `--timestep_bias_strategy=range`, the final timestep (inclusive) to bias."
-            " Defaults to 1000, which is the number of timesteps that Stable Diffusion is trained on."
-        ),
-    )
-    parser.add_argument(
-        "--timestep-bias-portion",
-        type=float,
-        default=0.25,
-        help=(
-            "The portion of timesteps to bias. Defaults to 0.25, which 25% of timesteps will be biased."
-            " A value of 0.5 will bias one half of the timesteps. The value provided for `--timestep_bias_strategy` determines"
-            " whether the biased portions are in the earlier or later timesteps."
-        ),
-    )
-    parser.add_argument(
         "--snr-gamma",
         type=float,
         default=None,
         help="SNR weighting gamma to be used if rebalancing the loss. Recommended value is 5.0. "
         "More details here: https://arxiv.org/abs/2303.09556.",
+    )
+    parser.add_argument(
+        "--force_snr_gamma",
+        action="store_true",
+        help=(
+            "When using SNR gamma with rescaled betas for zero terminal SNR, a divide-by-zero error can cause NaN"
+            " condition when computing the SNR with a sigma value of zero. This parameter overrides the check,"
+            " allowing the use of SNR gamma with a terminal SNR model. Use with caution, and closely monitor results."
+        ),
     )
     parser.add_argument("--use_ema", action="store_true", help="Whether to use EMA model.")
     parser.add_argument(
@@ -569,47 +529,6 @@ def compute_vae_encodings(batch, vae):
         model_input = vae.encode(pixel_values).latent_dist.sample()
     model_input = model_input * vae.config.scaling_factor
     return {"model_input": model_input.cpu()}
-
-
-def generate_timestep_weights(args, num_timesteps):
-    weights = torch.ones(num_timesteps)
-
-    # Determine the indices to bias
-    num_to_bias = int(args.timestep_bias_portion * num_timesteps)
-
-    if args.timestep_bias_strategy == "later":
-        bias_indices = slice(-num_to_bias, None)
-    elif args.timestep_bias_strategy == "earlier":
-        bias_indices = slice(0, num_to_bias)
-    elif args.timestep_bias_strategy == "range":
-        # Out of the possible 1000 timesteps, we might want to focus on eg. 200-500.
-        range_begin = args.timestep_bias_begin
-        range_end = args.timestep_bias_end
-        if range_begin < 0:
-            raise ValueError(
-                "When using the range strategy for timestep bias, you must provide a beginning timestep greater or equal to zero."
-            )
-        if range_end > num_timesteps:
-            raise ValueError(
-                "When using the range strategy for timestep bias, you must provide an ending timestep smaller than the number of timesteps."
-            )
-        bias_indices = slice(range_begin, range_end)
-    else:  # 'none' or any other string
-        return weights
-    if args.timestep_bias_multiplier <= 0:
-        return ValueError(
-            "The parameter --timestep_bias_multiplier is not intended to be used to disable the training of specific timesteps."
-            " If it was intended to disable timestep bias, use `--timestep_bias_strategy none` instead."
-            " A timestep bias multiplier less than or equal to 0 is not allowed."
-        )
-
-    # Apply the bias
-    weights[bias_indices] *= args.timestep_bias_multiplier
-
-    # Normalize
-    weights /= weights.sum()
-
-    return weights
 
 
 def main(args):
@@ -1103,18 +1022,11 @@ def main(args):
                     )
 
                 bsz = model_input.shape[0]
-                if args.timestep_bias_strategy == "none":
-                    # Sample a random timestep for each image without bias.
-                    timesteps = torch.randint(
-                        0, noise_scheduler.config.num_train_timesteps, (bsz,), device=model_input.device
-                    )
-                else:
-                    # Sample a random timestep for each image, potentially biased by the timestep weights.
-                    # Biasing the timestep weights allows us to spend less time training irrelevant timesteps.
-                    weights = generate_timestep_weights(args, noise_scheduler.config.num_train_timesteps).to(
-                        model_input.device
-                    )
-                    timesteps = torch.multinomial(weights, bsz, replacement=True).long()
+                # Sample a random timestep for each image
+                timesteps = torch.randint(
+                    0, noise_scheduler.config.num_train_timesteps, (bsz,), device=model_input.device
+                )
+                timesteps = timesteps.long()
 
                 # Add noise to the model input according to the noise magnitude at each timestep
                 # (this is the forward diffusion process)
@@ -1152,11 +1064,6 @@ def main(args):
                     target = noise
                 elif noise_scheduler.config.prediction_type == "v_prediction":
                     target = noise_scheduler.get_velocity(model_input, noise, timesteps)
-                elif noise_scheduler.config.prediction_type == "sample":
-                    # We set the target to latents here, but the model_pred will return the noise sample prediction.
-                    target = model_input
-                    # We will have to subtract the noise residual from the prediction to get the target sample.
-                    model_pred = model_pred - noise
                 else:
                     raise ValueError(f"Unknown prediction type {noise_scheduler.config.prediction_type}")
 
@@ -1167,13 +1074,12 @@ def main(args):
                     # Since we predict the noise instead of x_0, the original formulation is slightly changed.
                     # This is discussed in Section 4.2 of the same paper.
                     snr = compute_snr(timesteps)
-                    if noise_scheduler.config.prediction_type == "v_prediction":
-                        # Velocity objective requires that we add one to SNR values before we divide by them.
-                        snr = snr + 1
                     mse_loss_weights = (
                         torch.stack([snr, args.snr_gamma * torch.ones_like(timesteps)], dim=1).min(dim=1)[0] / snr
                     )
-
+                    # We first calculate the original loss. Then we mean over the non-batch dimensions and
+                    # rebalance the sample-wise losses with their respective loss weights.
+                    # Finally, we take the mean of the rebalanced loss.
                     loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
                     loss = loss.mean(dim=list(range(1, len(loss.shape)))) * mse_loss_weights
                     loss = loss.mean()
