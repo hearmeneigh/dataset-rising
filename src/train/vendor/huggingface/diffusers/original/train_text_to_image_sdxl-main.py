@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-
-# from:
-# https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image_sdxl.py
-
 # Copyright 2023 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,15 +51,13 @@ from diffusers import (
     UNet2DConditionModel,
 )
 from diffusers.optimization import get_scheduler
-from diffusers.training_utils import EMAModel
+from diffusers.training_utils import EMAModel, compute_snr
 from diffusers.utils import check_min_version, is_wandb_available
 from diffusers.utils.import_utils import is_xformers_available
 
-import s3fs
-from train.vendor.huggingface.diffusers.resize_with_pad import ResizeWithPad
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
-check_min_version("0.21.0")
+check_min_version("0.22.0.dev0")
 
 logger = get_logger(__name__)
 
@@ -133,18 +127,16 @@ def import_model_class_from_model_name_or_path(
 
 
 def parse_args(input_args=None):
-    parser = argparse.ArgumentParser(description="Dataset Rising SDXL training script.")
-
-    ## CHANGE: dashes instead of underscores
+    parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument(
-        "--pretrained-model-name-or-path",
+        "--pretrained_model_name_or_path",
         type=str,
         default=None,
         required=True,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
     )
     parser.add_argument(
-        "--pretrained-vae-model-name-or-path",
+        "--pretrained_vae_model_name_or_path",
         type=str,
         default=None,
         help="Path to pretrained VAE model with better numerical stability. More details: https://github.com/huggingface/diffusers/pull/4038.",
@@ -157,7 +149,7 @@ def parse_args(input_args=None):
         help="Revision of pretrained model identifier from huggingface.co/models.",
     )
     parser.add_argument(
-        "--dataset-name",
+        "--dataset_name",
         type=str,
         default=None,
         help=(
@@ -167,13 +159,13 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--dataset-config-name",
+        "--dataset_config_name",
         type=str,
         default=None,
         help="The config of the Dataset, leave as None if there's only one config.",
     )
     parser.add_argument(
-        "--train-data-dir",
+        "--train_data_dir",
         type=str,
         default=None,
         help=(
@@ -183,28 +175,28 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--image-column", type=str, default="image", help="The column of the dataset containing an image."
+        "--image_column", type=str, default="image", help="The column of the dataset containing an image."
     )
     parser.add_argument(
-        "--caption-column",
+        "--caption_column",
         type=str,
         default="text",
         help="The column of the dataset containing a caption or a list of captions.",
     )
     parser.add_argument(
-        "--validation-prompt",
+        "--validation_prompt",
         type=str,
         default=None,
         help="A prompt that is used during validation to verify that the model is learning.",
     )
     parser.add_argument(
-        "--num-validation-images",
+        "--num_validation_images",
         type=int,
         default=4,
         help="Number of images that should be generated during validation with `validation_prompt`.",
     )
     parser.add_argument(
-        "--validation-epochs",
+        "--validation_epochs",
         type=int,
         default=1,
         help=(
@@ -213,7 +205,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--max-train-samples",
+        "--max_train_samples",
         type=int,
         default=None,
         help=(
@@ -222,19 +214,19 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--proportion-empty-prompts",
+        "--proportion_empty_prompts",
         type=float,
         default=0,
         help="Proportion of image prompts to be replaced with empty strings. Defaults to 0 (no prompt replacement).",
     )
     parser.add_argument(
-        "--output-dir",
+        "--output_dir",
         type=str,
         default="sdxl-model-finetuned",
         help="The output directory where the model predictions and checkpoints will be written.",
     )
     parser.add_argument(
-        "--cache-dir",
+        "--cache_dir",
         type=str,
         default=None,
         help="The directory where the downloaded models and datasets will be stored.",
@@ -250,7 +242,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--center-crop",
+        "--center_crop",
         default=False,
         action="store_true",
         help=(
@@ -259,22 +251,22 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--random-flip",
+        "--random_flip",
         action="store_true",
         help="whether to randomly flip images horizontally",
     )
     parser.add_argument(
-        "--train-batch-size", type=int, default=16, help="Batch size (per device) for the training dataloader."
+        "--train_batch_size", type=int, default=16, help="Batch size (per device) for the training dataloader."
     )
-    parser.add_argument("--num-train-epochs", type=int, default=100)
+    parser.add_argument("--num_train_epochs", type=int, default=100)
     parser.add_argument(
-        "--max-train-steps",
+        "--max_train_steps",
         type=int,
         default=None,
         help="Total number of training steps to perform.  If provided, overrides num_train_epochs.",
     )
     parser.add_argument(
-        "--checkpointing-steps",
+        "--checkpointing_steps",
         type=int,
         default=500,
         help=(
@@ -284,13 +276,13 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--checkpoints-total-limit",
+        "--checkpoints_total_limit",
         type=int,
         default=None,
         help=("Max number of checkpoints to store."),
     )
     parser.add_argument(
-        "--resume-from-checkpoint",
+        "--resume_from_checkpoint",
         type=str,
         default=None,
         help=(
@@ -299,30 +291,30 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--gradient-accumulation-steps",
+        "--gradient_accumulation_steps",
         type=int,
         default=1,
         help="Number of updates steps to accumulate before performing a backward/update pass.",
     )
     parser.add_argument(
-        "--gradient-checkpointing",
+        "--gradient_checkpointing",
         action="store_true",
         help="Whether or not to use gradient checkpointing to save memory at the expense of slower backward pass.",
     )
     parser.add_argument(
-        "--learning-rate",
+        "--learning_rate",
         type=float,
         default=1e-4,
         help="Initial learning rate (after the potential warmup period) to use.",
     )
     parser.add_argument(
-        "--scale-lr",
+        "--scale_lr",
         action="store_true",
         default=False,
         help="Scale the learning rate by the number of GPUs, gradient accumulation steps, and batch size.",
     )
     parser.add_argument(
-        "--lr-scheduler",
+        "--lr_scheduler",
         type=str,
         default="constant",
         help=(
@@ -331,10 +323,10 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--lr-warmup-steps", type=int, default=500, help="Number of steps for the warmup in the lr scheduler."
+        "--lr_warmup_steps", type=int, default=500, help="Number of steps for the warmup in the lr scheduler."
     )
     parser.add_argument(
-        "--timestep-bias-strategy",
+        "--timestep_bias_strategy",
         type=str,
         default="none",
         choices=["earlier", "later", "range", "none"],
@@ -346,7 +338,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--timestep-bias-multiplier",
+        "--timestep_bias_multiplier",
         type=float,
         default=1.0,
         help=(
@@ -355,7 +347,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--timestep-bias-begin",
+        "--timestep_bias_begin",
         type=int,
         default=0,
         help=(
@@ -364,7 +356,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--timestep-bias-end",
+        "--timestep_bias_end",
         type=int,
         default=1000,
         help=(
@@ -373,7 +365,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--timestep-bias-portion",
+        "--timestep_bias_portion",
         type=float,
         default=0.25,
         help=(
@@ -383,7 +375,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--snr-gamma",
+        "--snr_gamma",
         type=float,
         default=None,
         help="SNR weighting gamma to be used if rebalancing the loss. Recommended value is 5.0. "
@@ -391,7 +383,7 @@ def parse_args(input_args=None):
     )
     parser.add_argument("--use_ema", action="store_true", help="Whether to use EMA model.")
     parser.add_argument(
-        "--allow-tf32",
+        "--allow_tf32",
         action="store_true",
         help=(
             "Whether or not to allow TF32 on Ampere GPUs. Can be used to speed up training. For more information, see"
@@ -399,7 +391,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--dataloader-num-workers",
+        "--dataloader_num_workers",
         type=int,
         default=0,
         help=(
@@ -407,29 +399,29 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--use-8bit-adam", action="store_true", help="Whether or not to use 8-bit Adam from bitsandbytes."
+        "--use_8bit_adam", action="store_true", help="Whether or not to use 8-bit Adam from bitsandbytes."
     )
-    parser.add_argument("--adam-beta1", type=float, default=0.9, help="The beta1 parameter for the Adam optimizer.")
-    parser.add_argument("--adam-beta2", type=float, default=0.999, help="The beta2 parameter for the Adam optimizer.")
-    parser.add_argument("--adam-weight-decay", type=float, default=1e-2, help="Weight decay to use.")
-    parser.add_argument("--adam-epsilon", type=float, default=1e-08, help="Epsilon value for the Adam optimizer")
-    parser.add_argument("--max-grad-norm", default=1.0, type=float, help="Max gradient norm.")
-    parser.add_argument("--push-to-hub", action="store_true", help="Whether or not to push the model to the Hub.")
-    parser.add_argument("--hub-token", type=str, default=None, help="The token to use to push to the Model Hub.")
+    parser.add_argument("--adam_beta1", type=float, default=0.9, help="The beta1 parameter for the Adam optimizer.")
+    parser.add_argument("--adam_beta2", type=float, default=0.999, help="The beta2 parameter for the Adam optimizer.")
+    parser.add_argument("--adam_weight_decay", type=float, default=1e-2, help="Weight decay to use.")
+    parser.add_argument("--adam_epsilon", type=float, default=1e-08, help="Epsilon value for the Adam optimizer")
+    parser.add_argument("--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
+    parser.add_argument("--push_to_hub", action="store_true", help="Whether or not to push the model to the Hub.")
+    parser.add_argument("--hub_token", type=str, default=None, help="The token to use to push to the Model Hub.")
     parser.add_argument(
-        "--prediction-type",
+        "--prediction_type",
         type=str,
         default=None,
         help="The prediction_type that shall be used for training. Choose between 'epsilon' or 'v_prediction' or leave `None`. If left to `None` the default prediction type of the scheduler: `noise_scheduler.config.prediciton_type` is chosen.",
     )
     parser.add_argument(
-        "--hub-model-id",
+        "--hub_model_id",
         type=str,
         default=None,
         help="The name of the repository to keep in sync with the local `output_dir`.",
     )
     parser.add_argument(
-        "--logging-dir",
+        "--logging_dir",
         type=str,
         default="logs",
         help=(
@@ -438,7 +430,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--report-to",
+        "--report_to",
         type=str,
         default="tensorboard",
         help=(
@@ -447,7 +439,7 @@ def parse_args(input_args=None):
         ),
     )
     parser.add_argument(
-        "--mixed-precision",
+        "--mixed_precision",
         type=str,
         default=None,
         choices=["no", "fp16", "bf16"],
@@ -457,31 +449,11 @@ def parse_args(input_args=None):
             " flag passed with the `accelerate.launch` command. Use this argument to override the accelerate config."
         ),
     )
-    parser.add_argument("--local-rank", type=int, default=-1, help="For distributed training: local_rank")
+    parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
     parser.add_argument(
-        "--enable-xformers-memory-efficient-attention", action="store_true", help="Whether or not to use xformers."
+        "--enable_xformers_memory_efficient_attention", action="store_true", help="Whether or not to use xformers."
     )
-    parser.add_argument("--noise-offset", type=float, default=0, help="The scale of noise offset.")
-
-    ## CHANGE: reshuffle tags arguments
-    parser.add_argument(
-        "--reshuffle-tags",
-        action="store_true",
-        help="Whether to shuffle tag order",
-    )
-    parser.add_argument(
-        "--tag-separator",
-        type=str,
-        default=' ',
-        help="Tag separator string",
-    )
-    parser.add_argument(
-        "--maintain-aspect-ratio",
-        action="store_true",
-        help="Maintain aspect ratio while resizing (padded when necessary)",
-    )
-    ## /CHANGE
-
+    parser.add_argument("--noise_offset", type=float, default=0, help="The scale of noise offset.")
 
     if input_args is not None:
         args = parser.parse_args(input_args)
@@ -501,36 +473,21 @@ def parse_args(input_args=None):
 
     return args
 
-## CHANGE: refshuffle tags
-def reshuffle_tags(tag_cloud: str, separator: str) -> str:
-    tags = tag_cloud.strip().split(separator)
-    random.shuffle(tags)
-    return separator.join(tags)
-## /CHANGE
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, should_reshuffle_tags, tag_separator, is_train=True):
+def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, is_train=True):
     prompt_embeds_list = []
     prompt_batch = batch[caption_column]
 
     captions = []
     for caption in prompt_batch:
-        # CHANGE: reshuffle tags
         if random.random() < proportion_empty_prompts:
-            txt = ''
+            captions.append("")
         elif isinstance(caption, str):
-            txt = caption
+            captions.append(caption)
         elif isinstance(caption, (list, np.ndarray)):
             # take a random caption if there are multiple
-            txt = random.choice(caption) if is_train else caption[0]
-        else:
-            txt = ''
-
-        if should_reshuffle_tags is True:
-            txt = reshuffle_tags(txt, separator=tag_separator)
-
-        captions.append(txt)
-        # /CHANGE
+            captions.append(random.choice(caption) if is_train else caption[0])
 
     with torch.no_grad():
         for tokenizer, text_encoder in zip(tokenizers, text_encoders):
@@ -678,18 +635,6 @@ def main(args):
     # Load scheduler and models
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
     # Check for terminal SNR in combination with SNR Gamma
-    if (
-        args.snr_gamma
-        and not args.force_snr_gamma
-        and (
-            hasattr(noise_scheduler.config, "rescale_betas_zero_snr") and noise_scheduler.config.rescale_betas_zero_snr
-        )
-    ):
-        raise ValueError(
-            f"The selected noise scheduler for the model {args.pretrained_model_name_or_path} uses rescaled betas for zero SNR.\n"
-            "When this configuration is present, the parameter --snr_gamma may not be used without parameter --force_snr_gamma.\n"
-            "This is due to a mathematical incompatibility between our current SNR gamma implementation, and a sigma value of zero."
-        )
     text_encoder_one = text_encoder_cls_one.from_pretrained(
         args.pretrained_model_name_or_path, subfolder="text_encoder", revision=args.revision
     )
@@ -748,30 +693,6 @@ def main(args):
             unet.enable_xformers_memory_efficient_attention()
         else:
             raise ValueError("xformers is not available. Make sure it is installed correctly")
-
-    def compute_snr(timesteps):
-        """
-        Computes SNR as per https://github.com/TiankaiHang/Min-SNR-Diffusion-Training/blob/521b624bd70c67cee4bdf49225915f5945a872e3/guided_diffusion/gaussian_diffusion.py#L847-L849
-        """
-        alphas_cumprod = noise_scheduler.alphas_cumprod
-        sqrt_alphas_cumprod = alphas_cumprod**0.5
-        sqrt_one_minus_alphas_cumprod = (1.0 - alphas_cumprod) ** 0.5
-
-        # Expand the tensors.
-        # Adapted from https://github.com/TiankaiHang/Min-SNR-Diffusion-Training/blob/521b624bd70c67cee4bdf49225915f5945a872e3/guided_diffusion/gaussian_diffusion.py#L1026
-        sqrt_alphas_cumprod = sqrt_alphas_cumprod.to(device=timesteps.device)[timesteps].float()
-        while len(sqrt_alphas_cumprod.shape) < len(timesteps.shape):
-            sqrt_alphas_cumprod = sqrt_alphas_cumprod[..., None]
-        alpha = sqrt_alphas_cumprod.expand(timesteps.shape)
-
-        sqrt_one_minus_alphas_cumprod = sqrt_one_minus_alphas_cumprod.to(device=timesteps.device)[timesteps].float()
-        while len(sqrt_one_minus_alphas_cumprod.shape) < len(timesteps.shape):
-            sqrt_one_minus_alphas_cumprod = sqrt_one_minus_alphas_cumprod[..., None]
-        sigma = sqrt_one_minus_alphas_cumprod.expand(timesteps.shape)
-
-        # Compute SNR.
-        snr = (alpha / sigma) ** 2
-        return snr
 
     # `accelerate` 0.16.0 will have better support for customized saving
     if version.parse(accelerate.__version__) >= version.parse("0.16.0"):
@@ -897,10 +818,6 @@ def main(args):
     train_flip = transforms.RandomHorizontalFlip(p=1.0)
     train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
 
-    # CHANGE: padded resize
-    train_resize_with_pad = ResizeWithPad(interpolation=transforms.InterpolationMode.LANCZOS, target_width=args.resolution, target_height=args.resolution)
-    # /CHANGE
-
     def preprocess_train(examples):
         images = [image.convert("RGB") for image in examples[image_column]]
         # image aug
@@ -909,24 +826,14 @@ def main(args):
         crop_top_lefts = []
         for image in images:
             original_sizes.append((image.height, image.width))
-
-            # CHANGE: padded resize
-            if args.maintain_aspect_ratio:
-                image = train_resize_with_pad(image)
+            image = train_resize(image)
+            if args.center_crop:
                 y1 = max(0, int(round((image.height - args.resolution) / 2.0)))
                 x1 = max(0, int(round((image.width - args.resolution) / 2.0)))
+                image = train_crop(image)
             else:
-                image = train_resize(image)
-
-                if args.center_crop:
-                    y1 = max(0, int(round((image.height - args.resolution) / 2.0)))
-                    x1 = max(0, int(round((image.width - args.resolution) / 2.0)))
-                    image = train_crop(image)
-                else:
-                    y1, x1, h, w = train_crop.get_params(image, (args.resolution, args.resolution))
-                    image = crop(image, y1, x1, h, w)
-            ## /CHANGE
-
+                y1, x1, h, w = train_crop.get_params(image, (args.resolution, args.resolution))
+                image = crop(image, y1, x1, h, w)
             if args.random_flip and random.random() < 0.5:
                 # flip
                 x1 = image.width - x1
@@ -944,11 +851,6 @@ def main(args):
     with accelerator.main_process_first():
         if args.max_train_samples is not None:
             dataset["train"] = dataset["train"].shuffle(seed=args.seed).select(range(args.max_train_samples))
-        ## CHANGE: always shuffle
-        else:
-            dataset["train"] = dataset["train"].shuffle(seed=args.seed)
-        ## /CHANGE
-
         # Set the training transforms
         train_dataset = dataset["train"].with_transform(preprocess_train)
 
@@ -962,8 +864,6 @@ def main(args):
         tokenizers=tokenizers,
         proportion_empty_prompts=args.proportion_empty_prompts,
         caption_column=args.caption_column,
-        should_reshuffle_tags=args.reshuffle_tags,
-        tag_separator=args.tag_separator,
     )
     compute_vae_encodings_fn = functools.partial(compute_vae_encodings, vae=vae)
     with accelerator.main_process_first():
@@ -1166,7 +1066,7 @@ def main(args):
                     # Compute loss-weights as per Section 3.4 of https://arxiv.org/abs/2303.09556.
                     # Since we predict the noise instead of x_0, the original formulation is slightly changed.
                     # This is discussed in Section 4.2 of the same paper.
-                    snr = compute_snr(timesteps)
+                    snr = compute_snr(noise_scheduler, timesteps)
                     if noise_scheduler.config.prediction_type == "v_prediction":
                         # Velocity objective requires that we add one to SNR values before we divide by them.
                         snr = snr + 1
@@ -1350,11 +1250,6 @@ def main(args):
                 commit_message="End of training",
                 ignore_patterns=["step_*", "epoch_*"],
             )
-
-        if args.push_to_s3:
-            s3_file = s3fs.S3FileSystem()
-            s3_file.put(args.output_dir, args.push_to_s3, recursive=True)
-
 
     accelerator.end_training()
 
