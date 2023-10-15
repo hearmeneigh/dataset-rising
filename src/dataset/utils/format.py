@@ -28,12 +28,12 @@ def format_posts_for_dataset(shards):
 
         for sample_file in samples:
             if limit is not None and count >= limit:
-                continue
+                return
 
             with open(sample_file, 'rt') as ap:
                 for line in ap:
                     if limit is not None and count >= limit:
-                        continue
+                        return
 
                     post = PostEntity(post=json.loads(line))
                     download = download_image(post, agent)
@@ -69,6 +69,6 @@ def format_posts_for_dataset(shards):
                         'selector': post.selector
                     }
 
-                    yield record
                     count += 1
+                    yield record
 
