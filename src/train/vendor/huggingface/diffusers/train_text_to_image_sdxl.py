@@ -446,6 +446,12 @@ def parse_args(input_args=None):
         default=None,
         help="Force save temporary dataset state to disk",
     )
+    parser.add_argument(
+        '--fingerprint-batch-size',
+        type=int,
+        default=None,
+        help='Set fingerprint mapping batch size'
+    )
     ## /CHANGE
 
 
@@ -898,24 +904,27 @@ def main(args):
         # force_temp_dataset_store_dir
 
         if args.force_temp_dataset_store_dir is not None and os.path.exists(args.force_temp_dataset_store_dir):
-            train_dataset = dataset.load_from_disk(args.force_temp_dataset_store_dir)
+            train_dataset = datasets.load_from_disk(args.force_temp_dataset_store_dir)
             train_dataset = train_dataset.with_transform(preprocess_train)
         else:
             # fingerprint used by the cache for the other processes to load the result
             # details: https://github.com/huggingface/diffusers/pull/4038#discussion_r1266078401
             new_fingerprint = Hasher.hash(args)
             new_fingerprint_for_vae = Hasher.hash("vae")
+            fingerprint_batch_size = args.fingerprint_batch_size if args.fingerprint_batch_size is not None else args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
+
             train_dataset = train_dataset.map(compute_embeddings_fn, batched=True, new_fingerprint=new_fingerprint)
             train_dataset = train_dataset.map(
                 compute_vae_encodings_fn,
                 batched=True,
-                batch_size=args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps,
+                batch_size=fingerprint_batch_size,
                 new_fingerprint=new_fingerprint_for_vae,
             )
 
             if args.force_temp_dataset_store_dir is not None:
+                train_dataset.set_transform(transform=None)
                 train_dataset.save_to_disk(args.force_temp_dataset_store_dir)
-                train_dataset = dataset.load_from_disk(args.force_temp_dataset_store_dir)
+                train_dataset = datasets.load_from_disk(args.force_temp_dataset_store_dir)
                 train_dataset = train_dataset.with_transform(preprocess_train)
 
         ## /CHANGE
