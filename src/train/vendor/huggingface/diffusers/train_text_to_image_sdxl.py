@@ -239,7 +239,7 @@ def parse_args(input_args=None):
         default=None,
         help="The directory where the downloaded models and datasets will be stored.",
     )
-    parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
+    parser.add_argument("--seed", type=int, default=2849632, help="A seed for reproducible training.")
     parser.add_argument(
         "--resolution",
         type=int,
@@ -341,7 +341,7 @@ def parse_args(input_args=None):
         "More details here: https://arxiv.org/abs/2303.09556.",
     )
     parser.add_argument(
-        "--force_snr_gamma",
+        "--force-snr-gamma",
         action="store_true",
         help=(
             "When using SNR gamma with rescaled betas for zero terminal SNR, a divide-by-zero error can cause NaN"
@@ -439,6 +439,12 @@ def parse_args(input_args=None):
         "--maintain-aspect-ratio",
         action="store_true",
         help="Maintain aspect ratio while resizing (padded when necessary)",
+    )
+    parser.add_argument(
+        "--force-temp-dataset-store-dir",
+        type=str,
+        default=None,
+        help="Force save temporary dataset state to disk",
     )
     ## /CHANGE
 
@@ -888,17 +894,31 @@ def main(args):
     with accelerator.main_process_first():
         from datasets.fingerprint import Hasher
 
-        # fingerprint used by the cache for the other processes to load the result
-        # details: https://github.com/huggingface/diffusers/pull/4038#discussion_r1266078401
-        new_fingerprint = Hasher.hash(args)
-        new_fingerprint_for_vae = Hasher.hash("vae")
-        train_dataset = train_dataset.map(compute_embeddings_fn, batched=True, new_fingerprint=new_fingerprint)
-        train_dataset = train_dataset.map(
-            compute_vae_encodings_fn,
-            batched=True,
-            batch_size=args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps,
-            new_fingerprint=new_fingerprint_for_vae,
-        )
+        ## CHANGE: save to disk with --force-temp-dataset-store-dir
+        # force_temp_dataset_store_dir
+
+        if args.force_temp_dataset_store_dir is not None and os.path.exists(args.force_temp_dataset_store_dir):
+            train_dataset = dataset.load_from_disk(args.force_temp_dataset_store_dir)
+            train_dataset = train_dataset.with_transform(preprocess_train)
+        else:
+            # fingerprint used by the cache for the other processes to load the result
+            # details: https://github.com/huggingface/diffusers/pull/4038#discussion_r1266078401
+            new_fingerprint = Hasher.hash(args)
+            new_fingerprint_for_vae = Hasher.hash("vae")
+            train_dataset = train_dataset.map(compute_embeddings_fn, batched=True, new_fingerprint=new_fingerprint)
+            train_dataset = train_dataset.map(
+                compute_vae_encodings_fn,
+                batched=True,
+                batch_size=args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps,
+                new_fingerprint=new_fingerprint_for_vae,
+            )
+
+            if args.force_temp_dataset_store_dir is not None:
+                train_dataset.save_to_disk(args.force_temp_dataset_store_dir)
+                train_dataset = dataset.load_from_disk(args.force_temp_dataset_store_dir)
+                train_dataset = train_dataset.with_transform(preprocess_train)
+
+        ## /CHANGE
 
     del text_encoders, tokenizers, vae
     gc.collect()
