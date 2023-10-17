@@ -789,7 +789,7 @@ def main(args):
     if args.dataset_name is not None:
         ## CHANGE: load_from_disk
         if args.dataset_name[0:1] == '/':
-            dataset = datasets.load_from_disk(args.dataset_name)
+            dataset = {'train': datasets.load_from_disk(args.dataset_name)}
         else:
         ## /CHANGE
             # Downloading and loading a dataset from the hub.
