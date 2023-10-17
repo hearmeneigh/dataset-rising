@@ -430,6 +430,12 @@ def parse_args(input_args=None):
         help="Whether to shuffle tag order",
     )
     parser.add_argument(
+        "--push-to-s3",
+        type=str,
+        default=None,
+        help="Upload to S3",
+    )
+    parser.add_argument(
         "--tag-separator",
         type=str,
         default=' ',
