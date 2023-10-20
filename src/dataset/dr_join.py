@@ -20,6 +20,7 @@ def get_args():
     parser.add_argument('-o', '--output', metavar='FILE', type=str, help='JSONL file where the joined output will be written', required=True)
     parser.add_argument('-s', '--samples', metavar='FILE', type=str, action='append', help='Post JSONL file(s) to import', required=True)
     parser.add_argument('--export-tags', metavar='FILE', type=str, help='Export tag counts as a JSON file', required=False, default=None)
+    parser.add_argument('--import-tags', metavar='FILE', type=str, help='Import and enforce previously generated tag space', required=False, default=None)
     parser.add_argument('--export-autocomplete', metavar='FILE', type=str, help='Export autocomplete hints as a a1111-sd-webui-tagcomplete CSV file', required=False, default=None)
     parser.add_argument('--min-posts-per-tag', metavar='COUNT', type=int, help='Minimum number of posts a tag must appear in to be included', required=False, default=100)
     parser.add_argument('--min-tags-per-post', metavar='COUNT', type=int, help='Minimum number of tags in a post for the post to be included (counted after min-posts-per-tag limit has been applied)', required=False, default=10)
@@ -69,10 +70,13 @@ def main():
         print(f'Using {len(selection.posts)} ({round(len(selection.posts)/len(posts)*100, 1)}%) from {selection.filename}')
 
     # prune and filter tags
-    print('Pruning tags...')
-    tag_counts = prune_and_filter_tags(posts, prefilters, args.min_posts_per_tag)
-
-    print(f'Using {len(tag_counts)} tags')
+    if args.import_tags is None:
+        print('Pruning tags...')
+        tag_counts = prune_and_filter_tags(posts, prefilters, args.min_posts_per_tag)
+        print(f'Using {len(tag_counts)} tags')
+    else:
+        with open(args.import_tags, 'r') as fp:
+            tag_counts = json.load(fp)
 
     # remove excess tags from posts
     for post in posts:
