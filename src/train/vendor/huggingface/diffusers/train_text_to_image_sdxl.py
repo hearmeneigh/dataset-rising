@@ -462,7 +462,7 @@ def parse_args(input_args=None):
         "--drop-tag-rate",
         type=float,
         default=None,
-        help="Randomly omit tags from training samples at the rate of 0 (none)..1 (all)",
+        help="Randomly omit tags from training samples at the rate of 0 (=no omissions) .. 1 (=omit all)",
     )
     ## /CHANGE
 
@@ -497,7 +497,7 @@ def reshuffle_tags(tag_cloud: str, separator: str) -> str:
 ## CHANGE: drop tags
 def drop_tags(tag_cloud: str, separator: str, drop_tag_rate: float) -> str:
     tags = tag_cloud.strip().split(separator)
-    final_tags = [tag for tag in tags if random.random() <= drop_tag_rate]
+    final_tags = [tag for tag in tags if random.random() > drop_tag_rate]
     return separator.join(final_tags)
 
 
