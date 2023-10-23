@@ -1,6 +1,6 @@
 [project]
 name = 'DatasetRising'
-version = '0.1.84'
+version = '1.0.0'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
 requires-python = '>=3.8'
@@ -12,7 +12,7 @@ keywords = ['training', 'crawler', 'machine-learning', 'imageboard', 'booru', 'd
     'stable-diffusion', 'huggingface-users', 'diffusers', 'sdxl']
 
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
     'Environment :: GPU',
     'Environment :: GPU :: NVIDIA CUDA',
@@ -26,6 +26,7 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
     'Topic :: Scientific/Engineering :: Image Processing'
 ]

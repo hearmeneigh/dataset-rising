@@ -479,6 +479,7 @@ def parse_args(input_args=None):
 
     return args
 
+
 ## CHANGE: refshuffle tags
 def reshuffle_tags(tag_cloud: str, separator: str) -> str:
     tags = tag_cloud.strip().split(separator)
@@ -486,8 +487,16 @@ def reshuffle_tags(tag_cloud: str, separator: str) -> str:
     return separator.join(tags)
 ## /CHANGE
 
+
+## CHANGE: drop tags
+def drop_tags(tag_cloud: str, separator: str, drop_tag_rate: float) -> str:
+    tags = tag_cloud.strip().split(separator)
+    final_tags = [tag for tag in tags if random.random() <= drop_tag_rate]
+    return separator.join(final_tags)
+
+
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, should_reshuffle_tags, tag_separator, is_train=True):
+def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, caption_column, should_reshuffle_tags, tag_separator, drop_tag_rate, is_train=True):
     prompt_embeds_list = []
     prompt_batch = batch[caption_column]
 
@@ -506,6 +515,9 @@ def encode_prompt(batch, text_encoders, tokenizers, proportion_empty_prompts, ca
 
         if should_reshuffle_tags is True:
             txt = reshuffle_tags(txt, separator=tag_separator)
+
+        if drop_tag_rate is not None and drop_tag_rate > 0:
+            txt = drop_tags(txt, separator=tag_separator, drop_tag_rate=drop_tag_rate)
 
         captions.append(txt)
         # /CHANGE
@@ -849,6 +861,7 @@ def main(args):
         original_sizes = []
         all_images = []
         crop_top_lefts = []
+
         for image in images:
             original_sizes.append((image.height, image.width))
 
@@ -881,6 +894,13 @@ def main(args):
         examples["original_sizes"] = original_sizes
         examples["crop_top_lefts"] = crop_top_lefts
         examples["pixel_values"] = all_images
+
+        if args.reshuffle_tags:
+            examples[caption_column] = reshuffle_tags(examples[caption_column], separator=args.tag_separator)
+
+        if args.drop_tag_rate is not None and args.drop_tag_rate > 0:
+            examples[caption_column] = drop_tags(examples[caption_column], separator=args.tag_separator, drop_tag_rate=args.args.drop_tag_rate)
+
         return examples
 
     with accelerator.main_process_first():
@@ -906,6 +926,7 @@ def main(args):
         caption_column=args.caption_column,
         should_reshuffle_tags=args.reshuffle_tags,
         tag_separator=args.tag_separator,
+        drop_tag_rate=args.drop_tag_rate
     )
     compute_vae_encodings_fn = functools.partial(compute_vae_encodings, vae=vae)
     with accelerator.main_process_first():
