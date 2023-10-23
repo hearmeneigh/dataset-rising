@@ -458,6 +458,12 @@ def parse_args(input_args=None):
         default=None,
         help='Set fingerprint mapping batch size'
     )
+    parser.add_argument(
+        "--drop-tag-rate",
+        type=float,
+        default=None,
+        help="Randomly omit tags from training samples at the rate of 0 (none)..1 (all)",
+    )
     ## /CHANGE
 
 
@@ -896,10 +902,10 @@ def main(args):
         examples["pixel_values"] = all_images
 
         if args.reshuffle_tags:
-            examples[caption_column] = reshuffle_tags(examples[caption_column], separator=args.tag_separator)
+            examples[caption_column] = [reshuffle_tags(example[caption_column], separator=args.tag_separator) for example in examples]
 
         if args.drop_tag_rate is not None and args.drop_tag_rate > 0:
-            examples[caption_column] = drop_tags(examples[caption_column], separator=args.tag_separator, drop_tag_rate=args.args.drop_tag_rate)
+            examples[caption_column] = [drop_tags(example[caption_column], separator=args.tag_separator, drop_tag_rate=args.args.drop_tag_rate) for example in examples]
 
         return examples
 
