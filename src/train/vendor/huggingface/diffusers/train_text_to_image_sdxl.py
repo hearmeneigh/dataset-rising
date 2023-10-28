@@ -902,10 +902,10 @@ def main(args):
         examples["pixel_values"] = all_images
 
         if args.reshuffle_tags:
-            examples[caption_column] = [reshuffle_tags(example[caption_column], separator=args.tag_separator) for example in examples]
+            examples[caption_column] = [reshuffle_tags(example, separator=args.tag_separator) for example in examples[caption_column]]
 
         if args.drop_tag_rate is not None and args.drop_tag_rate > 0:
-            examples[caption_column] = [drop_tags(example[caption_column], separator=args.tag_separator, drop_tag_rate=args.args.drop_tag_rate) for example in examples]
+            examples[caption_column] = [drop_tags(example, separator=args.tag_separator, drop_tag_rate=args.drop_tag_rate) for example in examples[caption_column]]
 
         return examples
 
