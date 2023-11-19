@@ -68,6 +68,10 @@ check_min_version("0.21.0")
 logger = get_logger(__name__)
 
 
+a = [1,2]
+b = [t for t in a if t is not None]
+
+
 DATASET_NAME_MAPPING = {
     "lambdalabs/pokemon-blip-captions": ("image", "text"),
 }

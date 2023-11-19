@@ -2,5 +2,5 @@
 
 source venv/bin/activate
 
-cd ./database
-python3 uninstall.py
+cd ./src
+python3 -m database.dr_db_uninstall
