@@ -4,21 +4,16 @@
     <title>Gallery: {{ title }}</title>
     <style>
         li img {
-            max-width: 150px;
-            max-height: 150px;
+            max-width: 275px;
+            max-height: 275px;
         }
 
         li {
             float: left;
             list-style: none;
             margin-left: 10px;
-            width: 150px;
-            height: 150px;
-        }
-
-        h3 {
-            clear: both;
-            margin-top: 2rem;
+            width: 275px;
+            height: 275px;
         }
 
         ul {
@@ -26,40 +21,121 @@
             margin: 0;
             display: inline-block;
         }
+
+        section {
+            background: rgb(176,227,205);
+            background: linear-gradient(180deg, rgb(247 253 212) 0%, rgba(215,255,238,1) 100%);
+
+            padding: 1rem;
+            margin: 0;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.25em;
+        }
+
+        section ul li img {
+            display: block;
+            border-radius: 0.25em;
+        }
+
+        section ul li {
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        section ul li a {
+            display: block;
+            width: min-content;
+        }
+
+        section h3 {
+            margin-top: 0;
+            font-family:sans-serif !important;
+            font-weight:normal;
+        }
+
+        section h3 small {
+            color: grey;
+        }
+
+        section h3 a {
+            text-decoration: none;
+            color: #003dff;
+        }
+
+
+        section h3 a:hover {
+            text-decoration: underline;
+            color: #0031c9;
+        }
+
+        h1 {
+          font-family:sans-serif !important;
+          font-weight:normal;
+          font-size: 20pt;
+          color: #4e6f86;
+
+        }
+
+        section li img {
+            border: 1px solid rgba(0, 0, 0, 0);
+        }
+
+        section li img:hover {
+            filter: brightness(1.2) sepia(50%);
+            border: 1px solid rgb(78 111 134 / 10%);
+        }
+
+        nav {
+            font-family: sans-serif;
+            margin-top: 1.5em;
+            margin-bottom: 2em;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 <h1>{{ title }}</h1>
 
 {% for tag in tags %}
-    <h3>{{ tag.title }} {% if tag.total_count %}<small>({{ tag.total_count }} total)</small>{% endif %}</h3>
+    <section>
+        <h3>
+            {% if tag.url %}
+                <a href="{{ tag.url }}">{{ tag.title }}</a>
+            {% else %}
+                {{ tag.title }}
+            {% endif %}
 
-{% if tag.images %}
-  <ul>
-      {% for im in tag.images %}
-      <li>
-        <a href="{{ im.image_url }}" target="_blank">
-            <img alt="{{ im.source }}: #{{ im.source_id }}" src="{{ im.small_url }}" />
-        </a>
-      </li>
-      {% endfor %}
-  </ul>
-{% else %}
-    <p><i>No images found.</i></p>
-{% endif %}
+            {% if tag.total_count %}<small>({{ "{:,.0f}".format(tag.total_count) }})</small>{% endif %}
+        </h3>
 
+        {% if tag.images %}
+          <ul>
+              {% for im in tag.images %}
+              <li>
+                <a href="{{ im | get_post_url }}" title="Matches: {{ ', '.join(im.matches) }}">
+                    <img alt="Matches: {{ ', '.join(im.matches) }}" src="{{ im.medium_url if im.medium_url is not none else (im.image_url if im.image_url is not none else missing_image_url) }}" />
+                </a>
+              </li>
+              {% endfor %}
+          </ul>
+        {% else %}
+            <p><i>No images found.</i></p>
+        {% endif %}
+    </section>
 {% endfor %}
 
 {% if pagination %}
-<div>
-    {% if pagination.next %}
-    <a href="{{ pagination.next }}">Next &gt;</a>
-    {% endif %}
-    {% if pagination.next and pagination.prev %} | {% endif %}
+<nav>
     {% if pagination.prev %}
     <a href="{{ pagination.prev }}">&lt; Prev</a>
     {% endif %}
-</div>
+    {% if pagination.next and pagination.prev %} | {% endif %}
+    {% if pagination.next %}
+    <a href="{{ pagination.next }}">Next &gt;</a>
+    {% endif %}
+</nav>
 {% endif %}
 
 </body>

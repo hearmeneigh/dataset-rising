@@ -95,10 +95,10 @@ script:
 
 ```bash
 # generate a HTML preview of how the selector will perform (note: --aggregate is required):
-dr-preview --selector ./examples/select/curated.yaml --output /tmp/curated-previews --limit 1000 --output --aggregate
+dr-preview --selector ./examples/select/tier-1/tier-1.yaml --output /tmp/preview/tier-1 --limit 1000 --output --aggregate
 
 # generate a HTML preview of how each sub-selector will perform:
-dr-preview --selector ./examples/select/positive/artists.yaml --output /tmp/curated-artists
+dr-preview --selector ./examples/select/tier-1/helpers/artists.yaml --output /tmp/preview/tier-1-artists
 ```
 
 ### 4. Select Images For a Dataset
@@ -110,10 +110,8 @@ building a dataset. Use `dr-select` to select posts from the database and store 
 ```bash
 cd <dataset-rising>/database
 
-dr-select --selector ./examples/select/curated.yaml --output /tmp/curated.jsonl
-dr-select --selector ./examples/select/negative.yaml --output /tmp/negative.jsonl
-dr-select --selector ./examples/select/positive.yaml --output /tmp/positive.jsonl
-dr-select --selector ./examples/select/uncurated.yaml --output /tmp/uncurated.jsonl
+dr-select --selector ./examples/select/tier-1/tier-1.yaml --output /tmp/tier-1.jsonl
+dr-select --selector ./examples/select/tier-2/tier-2.yaml --output /tmp/tier-2.jsonl
 ```
 
 ### 5. Build a Dataset
@@ -128,10 +126,8 @@ Adding a percentage at the end of a `--source` tells the build script to pick th
 
 ```bash
 dr-join \
-  --samples '/tmp/curated.jsonl:30%' \
-  --samples '/tmp/positive.jsonl:40%' \
-  --samples '/tmp/negative.jsonl:20%' \
-  --samples '/tmp/uncurated.jsonl:10%' \
+  --samples '/tmp/tier-1.jsonl:80%' \
+  --samples '/tmp/tier-2.jsonl:20%' \
   --output '/tmp/joined.jsonl'
 
 dr-build \

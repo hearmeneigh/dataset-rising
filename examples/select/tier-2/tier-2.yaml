@@ -1,0 +1,13 @@
+# This selector produces a set of *negative samples* of which
+# suitability we have high confidence.
+#
+# Intentionally in the 'include' section
+include:
+  - rising_unpopular
+  - score_below_0
+  - favorites_below_25
+  - meta:comic
+  - meta:animated
+
+exclude: []
+

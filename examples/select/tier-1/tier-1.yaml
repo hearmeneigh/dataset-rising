@@ -1,0 +1,13 @@
+# This selector produces a set of *positive samples* of which
+# suitability we have high confidence.
+
+include:
+  - rising_masterpiece
+  - !include ./helpers/artists.yaml
+  - !include ./helpers/style.yaml
+
+exclude:
+  - !include ./helpers/negative/score.yaml
+  - !include ./helpers/negative/style.yaml
+  - rating:explicit
+  - rating:questionable
