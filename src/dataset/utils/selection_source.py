@@ -5,14 +5,13 @@ from typing import List
 
 from database.entities.post import PostEntity
 
-
 class SelectionSource:
-    def __init__(self, filename_with_ratio: str):
+    def __init__(self, filename_with_ratio: str, skip_load = False):
         match = re.match(r'^(.*):([0-9.]+%|\*)$', filename_with_ratio)
 
         if match is None:
             filename = filename_with_ratio
-            ratio = 1.0
+            ratio = 'unknown'
         else:
             filename = match.group(1)
 
@@ -23,7 +22,9 @@ class SelectionSource:
 
         self.filename = filename
         self.ratio = ratio
-        self.posts = self.load(filename)
+
+        if not skip_load:
+            self.posts = self.load(filename)
 
     def load(self, filename: str) -> List[PostEntity]:
         posts = []

@@ -1,6 +1,6 @@
 [project]
 name = 'DatasetRising'
-version = '1.0.3'
+version = '1.0.4'
 description = 'Toolchain for creating and training Stable Diffusion models with custom datasets'
 readme = 'README.md'
 requires-python = '>=3.8'
