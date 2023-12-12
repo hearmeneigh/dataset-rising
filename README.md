@@ -132,9 +132,7 @@ dr-join \
 
 dr-build \
   --source '/tmp/joined.jsonl' \
-  --output '/tmp/my-dataset' \
-  --upload-to-hf 'username/dataset-name' \
-  --upload-to-s3 's3://some-bucket/some/path'
+  --output '/tmp/my-dataset'
 ```
 
 ### 6. Train a Model
@@ -155,7 +153,7 @@ to match the resolution the base model was trained with.
 > This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
 ```bash
-dr-train \
+dr-train-xl \
   --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
   --dataset-name 'username/dataset-name' \
   --output '/tmp/dataset-rising-v3-model' \
@@ -296,7 +294,7 @@ Some configurations will require `NCCL_P2P_DISABLE=1` and/or `NCCL_IB_DISABLE=1`
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1
 
-dr-train ...
+dr-train-xl ...
 ```
 
 ### Cache Directories
@@ -306,7 +304,7 @@ Use `HF_DATASETS_CACHE` and `HF_MODULES_CACHE` to control where Huggingface stor
 export HF_DATASETS_CACHE=/workspace/cache/huggingface/datasets
 export HF_MODULES_CACHE=/workspace/cache/huggingface/modules
 
-dr-train ...
+dr-train-xl ...
 ```
 
 
