@@ -152,6 +152,9 @@ to match the resolution the base model was trained with.
 
 > This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
+> This example uses `dr-train-xl`, which is designed for training Stable Diffusion XL models. If you want to train
+> Stable Diffusion 1.x or Stable Diffusion 2.x models, use `dr-train` instead.
+
 ```bash
 dr-train-xl \
   --pretrained-model-name-or-path 'stabilityai/stable-diffusion-xl-base-1.0' \
