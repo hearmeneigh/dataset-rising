@@ -141,7 +141,7 @@ After building your dataset, [upload it to Huggingface](https://huggingface.co/d
 
 
 ### 7. Train a Model
-The dataset built by the `dr-build` script is ready to be used for training as is.  Dataset Rising uses
+The dataset built by the `dr-build` script is now ready to be used for training.  Dataset Rising uses
 [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
 
 To train a model, you will need to pick a base model to start from. The `--base-model` can be any
