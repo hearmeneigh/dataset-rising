@@ -106,3 +106,17 @@ class BalanceTestCase(unittest.TestCase):
         self.assertEqual(len(s2.posts),  25)
         self.assertEqual(len(s3.posts), 15)
 
+    def test_multiple_files(self):
+        s1 = SelectionSource('/some/file', skip_load=True)
+        s2 = SelectionSource('/some/file2', skip_load=True)
+
+        s1.posts = [PostEntity() for _ in range(10)]
+        s2.posts = [PostEntity() for _ in range(25)]
+
+        balance_selections([s1, s2])
+
+        self.assertAlmostEqual(s1.ratio, 0.2857, places=4)
+        self.assertAlmostEqual(s2.ratio, 0.71428571, places=4)
+        self.assertEqual(len(s1.posts), 10)
+        self.assertEqual(len(s2.posts),  25)
+
