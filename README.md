@@ -136,8 +136,8 @@ dr-build \
 ```
 
 
-## 6. Upload the Model to Huggingface
-After building your dataset, [upload it to Huggingface](https://huggingface.co/docs/hub/models-uploading).
+## 6. Upload the Dataset to Huggingface
+After building your dataset, [upload it to Huggingface](https://huggingface.co/docs/datasets/upload_dataset).
 
 
 ### 7. Train a Model
