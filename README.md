@@ -135,7 +135,12 @@ dr-build \
   --output '/tmp/my-dataset'
 ```
 
-### 6. Train a Model
+
+## 6. Upload the Model to Huggingface
+After building your dataset, [upload it to Huggingface](https://huggingface.co/docs/hub/models-uploading).
+
+
+### 7. Train a Model
 The dataset built by the `dr-build` script is ready to be used for training as is.  Dataset Rising uses
 [Huggingface Accelerate](https://huggingface.co/docs/accelerate/index) to train Stable Diffusion models.
 
@@ -147,8 +152,10 @@ To train a model, you will need to pick a base model to start from. The `--base-
 * [stabilityai/stable-diffusion-2-1-base](https://huggingface.co/stabilityai/stable-diffusion-2-1-base)
 * [runwayml/stable-diffusion-v1-5](https://huggingface.co/runwayml/stable-diffusion-v1-5)
 
-Note that your training results will be improved significantly if you set `--image_width` and `--image_height`
+Note that your training results will be improved significantly if you set `--image-width` and `--image-height`
 to match the resolution the base model was trained with.
+
+Note that the training stage assumes that you have already uploaded your dataset to Huggingface.
 
 > This example does not scale to multiple GPUs. See the [Advanced Topics](#advanced-topics) section for multi-GPU training.
 
@@ -174,7 +181,9 @@ dr-train-xl \
   --lr-warmup-steps 0
 ```
 
-### 7. Generate Samples
+### 8. Generate Samples
+> This step has not yet been implemented. It is safe to skip this step.
+
 After training, you can use the `dr-generate` script to verify that the model is working as expected.
 
 ```bash
@@ -185,7 +194,7 @@ dr-generate \
   --samples 100 \
 ```
 
-### 8. Use the Model with Stable Diffusion WebUI
+### 9. Use the Model with Stable Diffusion WebUI
 In order to use the model with [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), it has to be converted to the `safetensors` format.
 
 ```bash
@@ -203,9 +212,6 @@ dr-convert-sd \
   
 # Copy the model to the WebUI models directory:
 cp '/tmp/dataset-rising-v3-model.safetensors' '<webui-root>/models/Stable-diffusion'
-
-# Copy the model configuration file to WebUI models directory:
-cp '/tmp/dataset-rising-v3-model.yaml' '<webui-root>/models/Stable-diffusion'
 ```
 
 ## Uninstall
